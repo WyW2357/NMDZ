@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+
+<head>
+	<link href="css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+	<link href="css/index.css" type="text/css" rel="stylesheet" media="screen,projection" />
+	<meta property="og:image" content="./img/pokerBanner.png" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<title>鸡宝宝牌站</title>
+	<style>
+		#gameDiv {
+			display: none;
+			opacity: 0;
+			transition: opacity 0.3s ease-in-out;
+		}
+		#gameDiv.visible {
+			opacity: 1;
+		}
+	</style>
+</head>
+
+<body>
+	<header>
+		<div class="navbar-fixed" id="navbar-ptwu">
+			<nav class="grey darken-4" role="navigation" id="navbar">
+				<a href="https://peterlwu.com" class="brand-logo center"><img class="responsive-img hover-item-2"
+						src="/3.jpg" width="64" height="64"></img></a>
+			</nav>
+		</div>
+	</header>
+	<div id="gameDiv">
+		<h4 class="white-text">现金桌规则 1/2 (买入/卖出 50<span style="color: #8B4513;">ⓜ</span> = 0.5元)</h4>
+		<div class="row">
+			<div class="col s12 m3">
+				<div id="playerInformationCard" class="card green darken-2">
+					<div class="card-content white-text">
+						<span class="card-title" id="usernamesCards"></span>
+						<div id="mycards"></div>
+					</div>
+				</div>
+			</div>
+			<div class="col s12 m2">
+				<div class="card green darken-2">
+					<div class="card-content white-text center-align">
+						<span class="card-title center-align" id="usernamesMoney"></span>
+						<div id="blindStatus"></div>
+						<div id="status"></div>
+						<br />
+						<div id="playNext"></div>
+						<button onClick=fold() id="usernameFold" class="btn white black-text menuButtons">弃牌</button>
+						<br />
+						<button onClick=check() id="usernameCheck" class="btn white black-text menuButtons">过牌</button>
+						<br />
+						<button href="#betModal" onClick=updateBetModal() id="usernameBet"
+							class="btn white black-text modal-trigger menuButtons">下注</button>
+						<br />
+						<button onClick=call() id="usernameCall" class="btn white black-text menuButtons">跟注</button>
+						<br />
+						<button href="#raiseModal" onClick=updateRaiseModal() id="usernameRaise"
+							class="btn white black-text modal-trigger menuButtons">加注</button>
+					</div>
+				</div>
+			</div>
+			<div class="col s12 m7">
+				<div class="card green darken-2">
+					<div class="card-content white-text">
+						<span id="table-title" class="card-title"></span>
+
+						<div id="communityCards"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div id="opponentCards"></div>
+		</div>
+	</div>
+	<div id="mainContent">
+		<div class=" valign-wrapper row login-box">
+			<div class="col card hoverable s12 m4">
+				<form>
+					<div class="card-content">
+						<span class="card-title black-text">Texas Hold &apos;Em Poker - 04.03更新</span>
+						<p>欢迎来到 Texas Hold &apos;Em Poker! 发起一场游戏, 其他人可以通过房间号加入.
+						</p>
+					</div>
+					<div class="card-action center-align">
+						<a id="hostButton" class="btn-large waves-effect waves-light indigo darken-3 white-text modal-trigger"
+							href="#hostModal">发起
+							游戏</a>
+						<a id="joinButton" class="btn-large waves-effect waves-light indigo darken-3 white-text modal-trigger"
+							href="#joinModal">加入
+							游戏</a>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s12 m8 offset-m2">
+				<div class="card">
+					<div class="card-content" style="text-align: center;">
+						<span class="card-title black-text" style="text-align: center; font-weight: bold;">玩家排行榜</span>
+						<table class="striped" style="width: 100%; font-size: 14px;">
+							<thead>
+								<tr>
+									<th style="width: 20%; text-align: center; font-weight: bold;">名次</th>
+									<th style="width: 50%; text-align: center; font-weight: bold;">玩家ID</th>
+									<th style="width: 30%; text-align: center; font-weight: bold;">统计</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">1</td>
+									<td style="text-align: center; font-weight: bold;">鸡宝宝</td>
+									<td style="color: red; text-align: center; font-weight: bold;">+149.5</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">2</td>
+									<td style="text-align: center; font-weight: bold;">金二爷</td>
+									<td style="color: red; text-align: center; font-weight: bold;">+133.5</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">3</td>
+									<td style="text-align: center; font-weight: bold;">DZ</td>
+									<td style="color: red; text-align: center; font-weight: bold;">+131</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">4</td>
+									<td style="text-align: center; font-weight: bold;">七月既望ty</td>
+									<td style="color: red; text-align: center; font-weight: bold;">+122</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">5</td>
+									<td style="text-align: center; font-weight: bold;">Like+</td>
+									<td style="color: red; text-align: center; font-weight: bold;">+58</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">6</td>
+									<td style="text-align: center; font-weight: bold;">魅魔大人</td>
+									<td style="color: red; text-align: center; font-weight: bold;">+3</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">7</td>
+									<td style="text-align: center; font-weight: bold;">JK</td>
+									<td style="color: black; text-align: center; font-weight: bold;">0</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">8</td>
+									<td style="text-align: center; font-weight: bold;">豪二爷</td>
+									<td style="color: green; text-align: center; font-weight: bold;">-51</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">9</td>
+									<td style="text-align: center; font-weight: bold;">RoOo</td>
+									<td style="color: green; text-align: center; font-weight: bold;">-546</td>
+								</tr>
+								<tr>
+									<td style="text-align: center; font-weight: bold;">10</td>
+									<td style="text-align: center; font-weight: bold;">——</td>
+									<td style="text-align: center; font-weight: bold;">——</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hostModal" class="modal">
+		<div class="modal-content">
+			<h4>发起游戏</h4>
+			<div id="hostModalContent">
+				<p>输入你的ID, 你将成为房主并获得房间号:</p>
+				<div class="input-field col s12">
+					<label for="name">ID</label>
+					<input type="text" name="name" id="hostName-field" required />
+				</div>
+				<button onclick=beginHost() type="submit"
+					class="waves-effect waves-light indigo darken-3 white-text btn-flat">获得
+					房间号</button>
+			</div>
+			<div id="playersNames"></div>
+			<div id="startGameArea"></div>
+		</div>
+		<div class="modal-footer">
+			<a class="modal-close waves-effect waves-light btn-flat">关闭</a>
+		</div>
+	</div>
+	</div>
+
+	<div id="joinModal" class="modal">
+		<div class="modal-content">
+			<h4>加入游戏</h4>
+			<div id="joinModalContent">
+				<p>输入你的ID和房间号, 你将加入游戏:(中途加入请确认房间小局结束后, 再点击按钮并等待!)</p>
+				<div class="input-field col s12">
+					<label for="name">ID</label>
+					<input type="text" name="name" id="joinName-field" required="required" />
+				</div>
+				<div class="input-field col s12">
+					<label for="code">房间号</label>
+					<input type="text" name="code" id="code-field" required="required" />
+				</div>
+				<button onclick=joinRoom() type="submit"
+					class="waves-effect waves-light indigo darken-3 white-text btn-flat">加入
+					游戏</button>
+			</div>
+			<div id="playersNamesJoined"></div>
+			<div id="startGameAreaDisconnectSituation"></div>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class="modal-close waves-effect waves-light btn-flat">关闭</a>
+		</div>
+	</div>
+
+	<div id="betModal" class="modal">
+		<div class="modal-content">
+			<h4>下注</h4>
+			<form action="#">
+				<div id="betDisplay">
+					<h4>滑动按钮来调整你的下注!</h4>
+				</div>
+				<p class="range-field">
+					<input type="range" id="betRangeSlider" min="0" max="100" value="0" onchange="updateBetDisplay()"
+						oninput="updateBetDisplay()" />
+				</p>
+			</form>
+			<br />
+			<button onclick=bet() type="submit"
+				class="modal-close waves-effect waves-light indigo darken-3 white-text btn-flat">确认
+				下注</button>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class="modal-close waves-effect waves-light btn-flat">关闭</a>
+		</div>
+	</div>
+
+	<div id="raiseModal" class="modal">
+		<div class="modal-content">
+			<h4>加注</h4>
+			<form action="#">
+				<div id="raiseDisplay">
+					<h4>滑动窗口来调整你的加注!</h4>
+				</div>
+				<p class="range-field">
+					<input type="range" id="raiseRangeSlider" min="0" max="100" value="0" onchange=updateRaiseDisplay() />
+				</p>
+			</form>
+			<br />
+			<button onclick=raise() type="submit"
+				class="modal-close waves-effect waves-light indigo darken-3 white-text btn-flat">确认
+				加注</button>
+		</div>
+		<div class="modal-footer">
+			<a href="#!" class="modal-close waves-effect waves-light btn-flat">关闭</a>
+		</div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.5.0/socket.io.min.js"></script>
+	<script src="./main.js"> </script>
+	<script src="./js/materialize.min.js"></script>
+
+</body>
+
+</html>
