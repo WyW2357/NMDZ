@@ -31,6 +31,7 @@ const Game = function (name, host) {
   this.debug = false;
   this.smallBlind = 1;
   this.bigBlind = 2;
+  this.playerStats = {}; // 添加全局统计记录
 
   const constructor = (function () {})(this);
 
@@ -74,6 +75,17 @@ const Game = function (name, host) {
   };
 
   this.startNewRound = () => {
+    // 在开始新一局时，移除所有断开连接的玩家
+    this.disconnectedPlayers.forEach(player => {
+      this.players = this.players.filter((p) => p !== player);
+      if (player.getUsername() == this.host) {
+        if (this.players.length > 0) {
+          this.host = this.players[0].getUsername();
+        }
+      }
+    });
+    this.disconnectedPlayers = [];
+    
     this.lastMoveParsed = { move: '', player: '' };
     this.roundInProgress = true;
     this.foldPot = 0;
@@ -362,17 +374,86 @@ const Game = function (name, host) {
           );
           this.players[currTurnIndex].setStatus('');
         }
-        let count = 0;
+        let count = 0; let A = 0;
         do {
-          //currTurnIndex = currTurnIndex - 1 < 0 ? this.players.length - 1 : currTurnIndex - 1;
           currTurnIndex = currTurnIndex + 1 < this.players.length ? currTurnIndex + 1 : 0;
-          count ++;
+          count++;
+          
+          // 检查当前玩家是否在掉线列表中
+          const currentPlayer = this.players[currTurnIndex];
+          if (this.disconnectedPlayers.includes(currentPlayer)) {
+            // 如果玩家掉线，自动执行弃牌
+            currentPlayer.setStatus('Fold');
+            const currentBet = this.getPlayerBetInStage(currentPlayer);
+            this.foldPot = this.foldPot + currentBet;
+            
+            // 更新当前回合的下注记录
+            const currentRoundBets = this.getCurrentRoundBets();
+            if (currentRoundBets.some(bet => bet.player === currentPlayer.getUsername())) {
+              this.setCurrentRoundBets(
+                currentRoundBets.map(bet => 
+                  bet.player === currentPlayer.getUsername() 
+                    ? { player: currentPlayer.getUsername(), bet: 'Fold' }
+                    : bet
+                )
+              );
+            } else {
+              currentRoundBets.push({
+                player: currentPlayer.getUsername(),
+                bet: 'Fold'
+              });
+            }
+            
+            // 如果掉线玩家是大盲，标记大盲已行动
+            if (currentPlayer.getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
+              this.bigBlindWent = true;
+            }
+            
+            // 检查是否只剩下一个玩家未弃牌
+            const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
+            if (numNonFolds === 1) {
+              // 只剩下一个玩家，直接结束本局
+              nonFolderPlayer.money = this.getCurrentPot() + nonFolderPlayer.money;
+              this.endHandAllFold(nonFolderPlayer.getUsername());
+              return;
+            }
+            
+            // 检查当前阶段是否已完成
+            if (this.isStageComplete()) {
+              this.log('掉线玩家弃牌后，当前阶段已完成');
+              if (this.roundData.bets.length == 1) {
+                this.community.push(this.deck.dealRandomCard());
+                this.community.push(this.deck.dealRandomCard());
+                this.community.push(this.deck.dealRandomCard());
+                this.updateStage();
+              } else if (this.roundData.bets.length == 2) {
+                this.community.push(this.deck.dealRandomCard());
+                this.updateStage();
+              } else if (this.roundData.bets.length == 3) {
+                this.community.push(this.deck.dealRandomCard());
+                this.updateStage();
+              } else if (this.roundData.bets.length == 4) {
+                handOver = true;
+                const roundResults = this.evaluateWinners();
+                for (playerResult of roundResults.playersData) {
+                  playerResult.player.setStatus(playerResult.hand.name);
+                }
+                const winningData = this.distributeMoney(roundResults);
+                this.revealCards(winningData.filter((a) => a.winner));
+              }
+              A = 1;
+             // return;
+            }
+          }
         } while (
-          (this.players[currTurnIndex].getStatus() == 'Fold'
-          || this.players[currTurnIndex].allIn)
-          && count < 100//Object.keys(this.players).length * 2 // Avoid infinite loop, allow search twice on all players
+          (this.players[currTurnIndex].getStatus() == 'Fold' || 
+           this.players[currTurnIndex].allIn || 
+           this.disconnectedPlayers.includes(this.players[currTurnIndex]))
+          && count < 100
         );
-        this.players[currTurnIndex].setStatus('Their Turn');
+        if (A == 0) {
+          this.players[currTurnIndex].setStatus('Their Turn');
+        }
       }
     }
     if (!handOver) {
@@ -565,6 +646,7 @@ const Game = function (name, host) {
         username: this.players[i].getUsername(),
         money: this.players[i].getMoney(),
         text: this.players[i].getStatus(),
+        buyIns: this.players[i].buyIns,  // 添加 buyIns 信息
       });
     }
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
@@ -574,6 +656,7 @@ const Game = function (name, host) {
         username: this.players[pn].getUsername(),
         pot: this.getCurrentPot(),
         money: this.players[pn].getMoney(),
+        buyIns: this.players[pn].buyIns,  // 添加 buyIns 信息
         cards: cardData,
         bets: this.roundData.bets,
       });
@@ -586,13 +669,25 @@ const Game = function (name, host) {
     let cardData = [];
     for (let i = 0; i < this.players.length; i++) {
       const winData = winners.find((w) => w.player === this.players[i]);
+      const money = this.players[i].getMoney();
+      const buyIns = this.players[i].buyIns;
+      const profit = money - 50 - (50 * (buyIns || 0));
+      
+      // 更新统计信息
+      this.playerStats[this.players[i].getUsername()] = {
+        money,
+        buyIns,
+        profit,
+        lastUpdate: Date.now()
+      };
+      
       cardData.push({
         username: this.players[i].getUsername(),
         cards: this.players[i].cards,
         hand: this.players[i].getStatus(),
         folded: this.players[i].getStatus() == 'Fold',
-        money: this.players[i].getMoney(),
-        buyIns: this.players[i].buyIns,
+        money: money,
+        buyIns: buyIns,
         gain: winData ? winData.gain : null,
       });
     }
@@ -734,17 +829,23 @@ const Game = function (name, host) {
   };
 
   this.disconnectPlayer = (player) => {
+    // 保存玩家统计信息
+    const username = player.getUsername();
+    const money = player.getMoney();
+    const buyIns = player.buyIns;
+    const profit = money - 50 - (50 * (buyIns || 0));
+    this.playerStats[username] = {
+      money,
+      buyIns,
+      profit,
+      lastUpdate: Date.now()
+    };
+    
+    // 将玩家标记为断开连接
     this.disconnectedPlayers.push(player);
-    if (player.getStatus() == 'Their Turn') {
-      this.moveOntoNextPlayer();
-    }
-    this.players = this.players.filter((a) => a !== player);
-    if (player.getUsername() == this.host) {
-      if (this.players.length > 0) {
-        this.host = this.players[0].getUsername();
-      }
-    }
-    this.emitPlayers('playerDisconnected', { player: player.getUsername() });
+    
+    // 通知其他玩家该玩家已断开连接
+    this.emitPlayers('playerDisconnected', { player: username });
     this.emitPlayers('joinRoomUpdate', {
       players: this.getPlayersArray(),
       code: this.getCode(),
@@ -1042,6 +1143,27 @@ const Game = function (name, host) {
     this.emitPlayers('playerJoined', {
       players: this.getPlayersArray()
     });
+  };
+
+  this.removePlayer = (socket) => {
+    const player = this.findPlayer(socket.id);
+    if (player) {
+      // 保存玩家统计信息
+      const username = player.getUsername();
+      const money = player.getMoney();
+      const buyIns = player.buyIns;
+      const profit = money - 50 - (50 * (buyIns || 0));
+      this.playerStats[username] = {
+        money,
+        buyIns,
+        profit,
+        lastUpdate: Date.now()
+      };
+      
+      this.players = this.players.filter((p) => p.id != socket.id);
+      this.log('玩家 ' + player.getUsername() + ' 离开游戏');
+      this.emitToAll('playerDisconnected', { player: player.getUsername() });
+    }
   };
 };
 

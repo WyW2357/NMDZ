@@ -9,6 +9,7 @@ var gameInfo = null;
 
 socket.on('playerDisconnected', function (data) {
   Materialize.toast(data.player + ' 断开连接.', 4000);
+  // 保留断开连接玩家的记录，不需要额外处理
 });
 
 socket.on('hostRoom', function (data) {
@@ -198,6 +199,8 @@ socket.on('gameBegin', function (data) {
     $('#gameDiv').show().addClass('visible');
     var playerTable = $('.card:contains("玩家排行榜")').parent().parent();
     playerTable.appendTo('#gameDiv');
+    var statisticsTable = $('.card:contains("实时统计")').parent().parent();
+    statisticsTable.appendTo('#gameDiv');
   }
 });
 
@@ -239,6 +242,45 @@ function playNext() {
   socket.emit('startNextRound', {});
 }
 
+function updateStatisticsTable(cardData) {
+  const statisticsBody = $('#statisticsBody');
+  
+  // 获取当前表格中的所有玩家记录
+  const currentTable = {};
+  $('#statisticsBody tr').each(function() {
+    const username = $(this).find('td:first').text();
+    const profit = parseInt($(this).find('td:last').text());
+    currentTable[username] = profit;
+  });
+  
+  // 更新或添加玩家记录
+  cardData.forEach(player => {
+    const profit = player.money - 50 - (50 * (player.buyIns || 0));
+    currentTable[player.username] = profit;
+  });
+  
+  // 清空表格
+  statisticsBody.empty();
+  
+  // 按收益从高到低排序并显示所有记录
+  Object.entries(currentTable)
+    .sort(([, a], [, b]) => b - a)
+    .forEach(([username, profit]) => {
+      const row = $('<tr>');
+      row.append($('<td>').text(username));
+      const profitCell = $('<td>');
+      // 正数带加号
+      profitCell.text(profit > 0 ? '+' + profit : profit);
+      if (profit > 0) {
+        profitCell.css('color', 'red');
+      } else if (profit < 0) {
+        profitCell.css('color', 'green');
+      }
+      row.append(profitCell);
+      statisticsBody.append(row);
+    });
+}
+
 socket.on('reveal', function (data) {
   $('#usernameFold').hide();
   $('#usernameCheck').hide();
@@ -256,6 +298,8 @@ socket.on('reveal', function (data) {
   $('#playNext').html(
     '<button onClick=playNext() id="playNextButton" class="btn white black-text menuButtons">开始下一局</button>'
   );
+  
+  updateStatisticsTable(data.cards);
   
   var handTest;
   if(data.hand == '')
@@ -306,6 +350,7 @@ socket.on('endHand', function (data) {
   $('#playNext').html(
     '<button onClick=playNext() id="playNextButton" class="btn white black-text menuButtons">开始下一局</button>'
   );
+  updateStatisticsTable(data.cards);
   $('#blindStatus').text('');
   if (data.folded == 'Fold') {
     $('#status').text('你已经弃牌');
@@ -326,6 +371,7 @@ socket.on('endHand', function (data) {
         money: p.money,
         blind: '',
         bets: data.bets,
+        buyIns: p.buyIns,
       });
     })
   );
