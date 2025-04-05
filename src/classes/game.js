@@ -2,6 +2,8 @@
 const Deck = require('./deck.js');
 const Player = require('./player.js');
 const Hand = require('pokersolver').Hand;
+const fs = require('fs');
+const path = require('path');
 
 const Game = function (name, host) {
   this.deck = new Deck();
@@ -28,17 +30,61 @@ const Game = function (name, host) {
   this.roundInProgress = false;
   this.disconnectedPlayers = [];
   this.autoBuyIns = true;
-  this.debug = true;
+  this.debug = false;
   this.smallBlind = 1;
   this.bigBlind = 2;
   this.playerStats = {}; // 添加全局统计记录
+  this.logQueue = [];  // 添加日志队列
+  this.isWriting = false;  // 添加写入锁
+
+  // 清空GameData.txt
+  const logFile = path.join(__dirname, '../../GameData.txt');
+  fs.writeFile(logFile, '', (err) => {
+    if (err) {
+      console.error('清空日志文件失败:', err);
+    } else {
+      this.log('=== 创建新房间 ===');
+      this.log('房间号: ' + this.gameName);
+      this.log('房主: ' + this.host);
+      this.log('================');
+    }
+  });
 
   const constructor = (function () {})(this);
 
   this.log = (...args) => {
     if (this.debug) {
+      // 控制台输出
       console.log(...args);
+    }  
+      // 将日志加入队列
+      const logMessage = args.join(' ') + '\n';
+      this.logQueue.push(logMessage);
+      
+      // 如果当前没有在写入，则开始写入
+      if (!this.isWriting) {
+        this.writeLog();
+      }
+    
+  };
+
+  this.writeLog = () => {
+    if (this.logQueue.length === 0) {
+      this.isWriting = false;
+      return;
     }
+
+    this.isWriting = true;
+    const logMessage = this.logQueue.shift();
+    const logFile = path.join(__dirname, '../../GameData.txt');
+    
+    fs.appendFile(logFile, logMessage, (err) => {
+      if (err) {
+        console.error('写入日志文件失败:', err);
+      }
+      // 继续写入队列中的下一条日志
+      this.writeLog();
+    });
   };
 
   this.assignBlind = () => {
@@ -95,15 +141,15 @@ const Game = function (name, host) {
     this.roundData.turn = '';
     this.roundData.bets = [];
     this.dealCards();
-    this.log('剩余牌数:' + this.deck.cards.length);
+    //this.log('剩余牌数:' + this.deck.cards.length);
     for (pn of this.players) {
       pn.allIn = false;
     }
 
     // 打印所有玩家信息
-    this.log('=== 新一局开始 ===');
-    this.log('房间号: ' + this.gameName);
-    this.log('房主: ' + this.host);
+    this.log('\n\n\n=== 新一局开始 ===');
+    this.log('房间号: ' + this.gameName + ' 房主: ' + this.host);
+    this.log('当前局数: ' + (this.roundNum + 1));
     // Init dealer
     if (this.roundNum == 0) {
       this.roundData.dealer = 0;
@@ -130,7 +176,7 @@ const Game = function (name, host) {
     }
     this.log('玩家信息:');
     this.players.forEach((player, index) => {
-      this.log(`玩家 ${index}: ${player.getUsername()}`);
+      this.log(`玩家编号${index}: ${player.getUsername()}`);
       this.log(`  筹码: ${player.getMoney()} 买入次数: ${player.buyIns}`);
       this.log(`  手牌: ${player.cards.map(card => `${card.getValue()}${card.getSuit()}`).join(', ')}`);
       this.log('---');
@@ -187,7 +233,7 @@ const Game = function (name, host) {
     this.log('================');
     this.log('当前stage: ' + this.getStageName() + ' 当前底池: ' + this.getCurrentPot());
     this.players.forEach((player, index) => {
-      this.log(`玩家${index}: ${player.getUsername()} 筹码: ${player.getMoney()} 买入: ${player.buyIns}`);
+      this.log(`玩家: ${player.getUsername()} 筹码: ${player.getMoney()} 买入: ${player.buyIns}`);
       this.log(`状态: ${player.getStatus()}`);
       this.log('---');
     });
