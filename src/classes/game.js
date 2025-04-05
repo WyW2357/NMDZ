@@ -28,16 +28,16 @@ const Game = function (name, host) {
   this.roundInProgress = false;
   this.disconnectedPlayers = [];
   this.autoBuyIns = true;
-  this.debug = false;
+  this.debug = true;
   this.smallBlind = 1;
   this.bigBlind = 2;
   this.playerStats = {}; // 添加全局统计记录
 
   const constructor = (function () {})(this);
 
-  this.log = () => {
+  this.log = (...args) => {
     if (this.debug) {
-      console.log(...arguments);
+      console.log(...args);
     }
   };
 
@@ -51,8 +51,9 @@ const Game = function (name, host) {
         ? this.roundData.smallBlind + 1
         : 0;
 
-    this.log('小盲: ' + this.roundData.smallBlind);
-    this.log('大盲: ' + this.roundData.bigBlind);
+    this.log('庄家: ' + this.players[this.roundData.dealer].getUsername());
+    this.log('小盲: ' + this.players[this.roundData.smallBlind].getUsername());
+    this.log('大盲: ' + this.players[this.roundData.bigBlind].getUsername());
 
     for (let i = 0; i < this.players.length; i++) {
       this.players[i].setDealer(i === this.roundData.dealer);
@@ -94,11 +95,15 @@ const Game = function (name, host) {
     this.roundData.turn = '';
     this.roundData.bets = [];
     this.dealCards();
-    this.log('已发牌数:' + this.deck.cards.length);
+    this.log('剩余牌数:' + this.deck.cards.length);
     for (pn of this.players) {
       pn.allIn = false;
     }
 
+    // 打印所有玩家信息
+    this.log('=== 新一局开始 ===');
+    this.log('房间号: ' + this.gameName);
+    this.log('房主: ' + this.host);
     // Init dealer
     if (this.roundNum == 0) {
       this.roundData.dealer = 0;
@@ -123,6 +128,13 @@ const Game = function (name, host) {
         }
       }
     }
+    this.log('玩家信息:');
+    this.players.forEach((player, index) => {
+      this.log(`玩家 ${index}: ${player.getUsername()}`);
+      this.log(`  筹码: ${player.getMoney()} 买入次数: ${player.buyIns}`);
+      this.log(`  手牌: ${player.cards.map(card => `${card.getValue()}${card.getSuit()}`).join(', ')}`);
+      this.log('---');
+    });
       this.players[this.roundData.bigBlind].money =
         this.players[this.roundData.bigBlind].money - this.bigBlind;
       this.roundData.bets.push([
@@ -172,6 +184,13 @@ const Game = function (name, host) {
         buyIns: this.players[pn].buyIns,
       });
     }
+    this.log('================');
+    this.log('当前stage: ' + this.getStageName() + ' 当前底池: ' + this.getCurrentPot());
+    this.players.forEach((player, index) => {
+      this.log(`玩家${index}: ${player.getUsername()} 筹码: ${player.getMoney()} 买入: ${player.buyIns}`);
+      this.log(`状态: ${player.getStatus()}`);
+      this.log('---');
+    });
   };
 
   this.getCurrentPot = () => {
@@ -457,7 +476,7 @@ const Game = function (name, host) {
       }
     }
     if (!handOver) {
-      this.log('正在重新渲染');
+      this.log('正在重新渲染（moveOntoNextPlayer结束）\n');
       this.rerender();
     }
   };
@@ -638,7 +657,7 @@ const Game = function (name, host) {
   };
 
   this.endHandAllFold = (username) => {
-    this.log('终局均弃牌' + this.players);
+    this.log('终局均弃牌');//+ this.players
     this.roundInProgress = false;
     let cardData = [];
     for (let i = 0; i < this.players.length; i++) {
@@ -730,7 +749,7 @@ const Game = function (name, host) {
       allPlayersPresent =
         currRound.filter((a) => a.bet != 'Fold').length >= numUnfolded;
     }
-    this.log('所有玩家在场 ' + allPlayersPresent);
+    this.log('所有可行动玩家已行动 ' + allPlayersPresent);
     let allPlayersCall = true;
     for (player of this.players) {
       if (
@@ -742,7 +761,7 @@ const Game = function (name, host) {
         break;
       }
     }
-    this.log('所有玩家跟注 ' + allPlayersCall);
+    this.log('所有玩家跟平 ' + allPlayersCall);
     return allPlayersPresent && allPlayersCall;
   };
 
@@ -884,6 +903,8 @@ const Game = function (name, host) {
     }
     player.setStatus('Fold');
     this.foldPot = this.foldPot + preFoldBetAmount;
+    this.log(`[弃牌] 玩家 ${player.getUsername()} 当前下注: ${preFoldBetAmount}，玩家底池: ${this.foldPot}`);
+    
     if (
       this.getCurrentRoundBets().some((a) => a.player == player.getUsername())
     ) {
@@ -910,6 +931,7 @@ const Game = function (name, host) {
     const player = this.findPlayer(socket.id);
     let currBet = this.getPlayerBetInStage(player);
     const topBet = this.getCurrentTopBet();
+    this.log(`[跟注] 玩家 ${player.getUsername()} 当前下注: ${currBet}，需要跟注到: ${topBet}，跟注金额: ${topBet - currBet}`);
     if (currBet === 0) {
       if (
         this.getCurrentRoundBets().some((a) => a.player == player.getUsername())
@@ -924,6 +946,7 @@ const Game = function (name, host) {
           );
           player.money = 0;
           player.allIn = true;
+          this.log(`玩家 ${player.getUsername()} 全押`);
         } else {
           this.setCurrentRoundBets(
             this.getCurrentRoundBets().map((a) =>
@@ -942,6 +965,7 @@ const Game = function (name, host) {
           });
           player.money = 0;
           player.allIn = true;
+          this.log(`玩家 ${player.getUsername()} 全押`);
         } else {
           this.getCurrentRoundBets().push({
             player: player.getUsername(),
@@ -969,6 +993,7 @@ const Game = function (name, host) {
           );
           player.money = 0;
           player.allIn = true;
+          this.log(`玩家 ${player.getUsername()} 全押`);
           this.moveOntoNextPlayer();
         } else {
           this.setCurrentRoundBets(
@@ -993,6 +1018,7 @@ const Game = function (name, host) {
     if (bet >= this.bigBlind) {
       const player = this.findPlayer(socket.id);
       if (player.getMoney() - bet >= 0) {
+        this.log(`[下注] 玩家 ${player.getUsername()} 下注金额: ${bet}，剩余筹码: ${player.getMoney() - bet}`);
         this.setCurrentRoundBets(
           this.getCurrentRoundBets().filter(
             (a) => a.player != player.getUsername()
@@ -1003,7 +1029,10 @@ const Game = function (name, host) {
           bet: bet,
         });
         player.money = player.money - bet;
-        if (player.money == 0) player.allIn = true;
+        if (player.money == 0) {
+          player.allIn = true;
+          this.log(`[全押] 玩家 ${player.getUsername()} 全押`);
+        }
         this.moveOntoNextPlayer();
         return true;
       }
@@ -1014,6 +1043,8 @@ const Game = function (name, host) {
     this.checkBigBlindWent(socket);
     let currBet = 0;
     const player = this.findPlayer(socket.id);
+    this.log(`[过牌] 玩家 ${player.getUsername()} 当前下注: ${currBet}`);
+    
     if (
       this.getCurrentRoundBets().find(
         (a) => a.player == player.getUsername()
@@ -1045,6 +1076,8 @@ const Game = function (name, host) {
     const player = this.findPlayer(socket.id);
     const currBet = this.getPlayerBetInStage(player);
     const moneyToRemove = bet - currBet;
+    this.log(`[加注] 玩家 ${player.getUsername()} 当前下注: ${currBet}，加注到: ${bet}，加注金额: ${moneyToRemove}，剩余筹码: ${player.getMoney() - moneyToRemove}`);
+    
     if (
       moneyToRemove > 0 &&
       bet >= topBet &&
@@ -1070,7 +1103,10 @@ const Game = function (name, host) {
         );
       }
       player.money -= moneyToRemove;
-      if (player.money == 0) player.allIn = true;
+      if (player.money == 0) {
+        player.allIn = true;
+        this.log(`[全押] 玩家 ${player.getUsername()} 全押`);
+      }
       this.moveOntoNextPlayer();
       return true;
     }
@@ -1127,6 +1163,15 @@ const Game = function (name, host) {
     
     for (const waitingPlayer of this.waitingPlayers) {
       const player = new Player(waitingPlayer.username, waitingPlayer.socket, this.debug);
+      
+      // 检查是否有同名玩家的历史记录
+      if (this.playerStats[waitingPlayer.username]) {
+        // 继承历史记录
+        player.money = this.playerStats[waitingPlayer.username].money;
+        player.buyIns = this.playerStats[waitingPlayer.username].buyIns;
+        this.log(`玩家 ${waitingPlayer.username} 中途加入游戏，继承历史记录`);
+      }
+      
       this.players.push(player);
       this.log('玩家 ' + waitingPlayer.username + ' 已从等待列表加入游戏');
       
