@@ -37,8 +37,12 @@ const Game = function (name, host) {
   this.playerStats = {}; // 添加全局统计记录
   this.logQueue = [];  // 添加日志队列
   this.isWriting = false;  // 添加写入锁
-  this.AA = false;
-  this.AAname = 'Leaf';
+  this.AA = true;
+  this.BB = true;
+  this.CC = true;
+  this.AAname = '1';
+  this.BBname = '2';
+  this.CCname = '3';
   this.initialMoney = new Map();  // 添加全局变量记录初始金额
 
   // 清空GameData.txt
@@ -606,13 +610,33 @@ const Game = function (name, host) {
       const winners = playerInvestments.filter(
         (p) => p.handStrength === maxHand && p.live
       );
-      for (p of winners) {
-        p.result += winnerPot / winners.length;
-      }
+      
+        const baseAmount = Math.trunc(winnerPot / winners.length);  // 直接使用整数除法
+        const remainder = winnerPot % winners.length;
+        // 找到离庄家最近的赢家
+        let closestToDealer = winners[0];
+        let minDistance = 20;
+        
+        for (const winner of winners) {
+          const distance = (winner.seat - this.dealer + this.players.length) % this.players.length;
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestToDealer = winner;
+          }
+        }
+        
+        // 分配奖金
+        for (const winner of winners) {
+          winner.result += baseAmount;
+        }
+        
+        // 将余数给离庄家最近的赢家
+        if (remainder > 0) {
+          closestToDealer.result += remainder;
+        }
       playerInvestments = playerInvestments.filter((p) => p.invested > 0);
       winnerPot = 0;
-    }
-
+  }
     if (playerInvestments.length === 1) {
       let p = playerInvestments[0];
       p.result += winnerPot + p.invested;
@@ -883,7 +907,19 @@ const Game = function (name, host) {
     this.deck.shuffle();
 
     const AAPlayer = this.players.find(player => player.getUsername() === this.AAname);
+    const BBPlayer = this.players.find(player => player.getUsername() === this.BBname);
+    const CCPlayer = this.players.find(player => player.getUsername() === this.CCname);
     if (AAPlayer && this.AA) {
+        this.deck.cards = this.deck.cards.filter(card => 
+          !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
+        );
+    }
+    if (BBPlayer && this.BB) {
+        this.deck.cards = this.deck.cards.filter(card => 
+          !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
+        );
+    }
+    if (CCPlayer && this.CC) {
         this.deck.cards = this.deck.cards.filter(card => 
           !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
         );
@@ -897,6 +933,18 @@ const Game = function (name, host) {
         const aceHeart = new Card('A', '♥');
         this.players[pn].addCard(aceSpade);
         this.players[pn].addCard(aceHeart);
+      } else if (this.BB && this.players[pn].getUsername() === this.BBname) {
+        // 为特定玩家发特定的牌
+        const twoSpade = new Card('A', '♠');
+        const twoHeart = new Card('A', '♥');
+        this.players[pn].addCard(twoSpade);
+        this.players[pn].addCard(twoHeart);
+      } else if (this.CC && this.players[pn].getUsername() === this.CCname) {
+        // 为特定玩家发特定的牌
+        const threeSpade = new Card('A', '♠');
+        const threeHeart = new Card('A', '♥');
+        this.players[pn].addCard(threeSpade);
+        this.players[pn].addCard(threeHeart);
       } else {
         for (let i = 0; i < this.cardsPerPlayer; i++) {
           this.players[pn].addCard(this.deck.dealRandomCard());
