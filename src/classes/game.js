@@ -618,7 +618,8 @@ const Game = function (name, host) {
         let minDistance = 20;
         
         for (const winner of winners) {
-          const distance = (winner.seat - this.dealer + this.players.length) % this.players.length;
+          const seat = this.players.findIndex(p => p === winner.player);
+          const distance = (seat - this.roundData.dealer) >= 0 ? (seat - this.roundData.dealer) : (seat - this.roundData.dealer + this.players.length);
           if (distance < minDistance) {
             minDistance = distance;
             closestToDealer = winner;
