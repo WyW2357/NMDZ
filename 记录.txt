@@ -1,6 +1,7 @@
 主要修改：
 在updateStage函数中添加了消除lastMoveParsed语句，修复“双黄”bug。
 AI修改添加了中途加入游戏功能，但有限制。
+在转牌结束后剩1人，会触发所有玩家allin和剩1人
 
 无限续杯：
 irm https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex

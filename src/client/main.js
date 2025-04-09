@@ -2,6 +2,23 @@ $(document).ready(function () {
   $('#gameDiv').hide();
   $('.modal-trigger').leanModal();
   $('.tooltipped').tooltip({ delay: 50 });
+  
+  // 添加倒计时样式
+  $('<style>')
+    .prop('type', 'text/css')
+    .html(`
+      .countdown {
+        text-align: center;
+        font-size: 1.2em;
+        color: white;
+        margin: 10px 0;
+      }
+      .countdown-number {
+        font-weight: bold;
+        color: #FF5722;
+      }
+    `)
+    .appendTo('head');
 });
 
 var socket = io();
@@ -133,10 +150,20 @@ socket.on('dealt', function (data) {
 });
 
 socket.on('rerender', function (data) {
-  if (data.myBet == 0) {
-    $('#usernamesCards').text(data.username + ' - 我的手牌');
-  } else {
-    $('#usernamesCards').html(data.username + ' - 我的下注: ' + data.myBet + '<span style="color: #8B4513;">ⓜ</span>');
+  if(data.strength == '') {
+    if (data.myBet == 0) {
+      $('#usernamesCards').text(data.username + ' - 我的手牌');
+    } else {
+      $('#usernamesCards').html(data.username + ' - 我的手牌 - 我的下注: ' + data.myBet + '<span style="color: #8B4513;">ⓜ</span>');
+    }
+  }
+  else {
+    const strengthText = data.strength;
+    if (data.myBet == 0) {
+      $('#usernamesCards').text(data.username + ' - 我的手牌 - (' + strengthText + ')');
+    } else {
+    $('#usernamesCards').html(data.username + ' - 我的手牌 - (' + strengthText + ') - 我的下注: ' + data.myBet + '<span style="color: #8B4513;">ⓜ</span>');
+    }
   }
   if (data.community != undefined)
     $('#communityCards').html(
@@ -294,10 +321,22 @@ socket.on('reveal', function (data) {
       break;
     }
   }
-  $('#table-title').text('本局赢家: ' + data.winners);
-  $('#playNext').html(
-    '<button onClick=playNext() id="playNextButton" class="btn white black-text menuButtons">开始下一局</button>'
-  );
+  $('#table-title').html('本局赢家: ' + data.winners);
+  $('#playNext').empty();
+  
+  // 添加倒计时显示
+  let countdown = 10;
+  const countdownElement = $('<div class="countdown">下一局将在 <span class="countdown-number">10</span> 秒后开始</div>');
+  $('#playNext').append(countdownElement);
+  
+  const timer = setInterval(() => {
+    countdown--;
+    countdownElement.find('.countdown-number').text(countdown);
+    if (countdown <= 0) {
+      clearInterval(timer);
+      countdownElement.remove();
+    }
+  }, 1000);
   
   updateStatisticsTable(data.cards);
   
@@ -347,9 +386,26 @@ socket.on('endHand', function (data) {
   $('#usernameCall').hide();
   $('#usernameRaise').hide();
   $('#table-title').html(data.winner + ' 赢得了 ' + data.pot + '<span style="color: #8B4513;">ⓜ</span> 的底池!');
-  $('#playNext').html(
-    '<button onClick=playNext() id="playNextButton" class="btn white black-text menuButtons">开始下一局</button>'
-  );
+  // $('#playNext').html(
+  //   '<button onClick=playNext() id="playNextButton" class="btn white black-text menuButtons">开始下一局</button>'
+  // );
+
+  $('#playNext').empty();
+  
+  // 添加倒计时显示
+  let countdown = 10;
+  const countdownElement = $('<div class="countdown">下一局将在 <span class="countdown-number">10</span> 秒后开始</div>');
+  $('#playNext').append(countdownElement);
+  
+  const timer = setInterval(() => {
+    countdown--;
+    countdownElement.find('.countdown-number').text(countdown);
+    if (countdown <= 0) {
+      clearInterval(timer);
+      countdownElement.remove();
+    }
+  }, 1000);
+  
   updateStatisticsTable(data.cards);
   $('#blindStatus').text('');
   if (data.folded == 'Fold') {

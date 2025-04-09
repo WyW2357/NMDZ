@@ -212,7 +212,22 @@ const Game = function (name, host) {
 
   this.rerender = () => {
     let playersData = [];
+    let handStrength = '';
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
+      if(this.community.length > 0) {
+        const hand = Hand.solve(this.convertCardsFormat(this.players[pn].cards.concat(this.community)));
+        if (hand.name === 'High Card') handStrength = '高牌';
+        else if (hand.name === 'Pair') handStrength = '一对';
+        else if (hand.name === 'Two Pair') handStrength = '两对';
+        else if (hand.name === 'Three of a Kind') handStrength = '三条';
+        else if (hand.name === 'Straight') handStrength = '顺子';
+        else if (hand.name === 'Flush') handStrength = '同花';
+        else if (hand.name === 'Full House') handStrength = '葫芦';
+        else if (hand.name === 'Four of a Kind') handStrength = '四条';
+        else if (hand.name === 'Straight Flush') handStrength = '同花顺';
+        else if (hand.name === 'Royal Flush') handStrength = '皇家同花顺';
+      }
+      
       playersData.push({
         username: this.players[pn].getUsername(),
         status: this.players[pn].getStatus(),
@@ -220,6 +235,7 @@ const Game = function (name, host) {
         money: this.players[pn].getMoney(),
         buyIns: this.players[pn].buyIns,
         isChecked: this.playerIsChecked(this.players[pn]),
+        strength: handStrength
       });
     }
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
@@ -238,6 +254,7 @@ const Game = function (name, host) {
         myBlind: this.players[pn].getBlind(),
         roundInProgress: this.roundInProgress,
         buyIns: this.players[pn].buyIns,
+        strength: playersData[pn].strength
       });
     }
     this.log('================');
@@ -365,6 +382,44 @@ const Game = function (name, host) {
 
   this.updateStage = () => {
     this.lastMoveParsed = { move: '', player: '' };
+    // 检查是否有掉线玩家需要处理
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.disconnectedPlayers.includes(this.players[i])) {
+        this.log('updateStage掉线处理');
+        // 如果掉线玩家未弃牌，则自动弃牌
+        if (this.players[i].getStatus() !== 'Fold') {
+          const currentBet = this.getPlayerBetInStage(this.players[i]);
+          this.foldPot = this.foldPot + currentBet;
+          
+          // 更新当前回合的下注记录
+          const currentRoundBets = this.getCurrentRoundBets();
+          if (currentRoundBets.some(bet => bet.player === this.players[i].getUsername())) {
+            this.setCurrentRoundBets(
+              currentRoundBets.map(bet => 
+                bet.player === this.players[i].getUsername() 
+                  ? { player: this.players[i].getUsername(), bet: 'Fold' }
+                  : bet
+              )
+            );
+          } else {
+            currentRoundBets.push({
+              player: this.players[i].getUsername(),
+              bet: 'Fold'
+            });
+          }
+          
+          // 设置玩家状态为弃牌
+          this.players[i].setStatus('Fold');
+          
+          // 如果掉线玩家是大盲，标记大盲已行动
+          if (this.players[i].getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
+            this.bigBlindWent = true;
+          }
+        }
+      }
+    }
+
+    // 设置下一个行动玩家
     for (let i = 0; i < this.players.length; i++) {
       if (
         i === this.findFirstToGoPlayer() &&
@@ -380,7 +435,17 @@ const Game = function (name, host) {
 
   this.moveOntoNextPlayer = () => {
     let handOver = false;
-    if (this.isStageComplete()) {
+    
+    // 首先检查是否只剩一个玩家未弃牌
+    const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
+    if (numNonFolds == 1) {
+      // everyone folded, start new round, give pot to player
+      this.log('除一人外所有玩家弃牌');
+      nonFolderPlayer.money = this.getCurrentPot() + nonFolderPlayer.money;
+      this.endHandAllFold(nonFolderPlayer.getUsername());
+      handOver = true;
+    }
+    else if (this.isStageComplete()) {
       this.log('阶段完成');
       if (this.allPlayersAllIn()) {
         this.log('所有玩家 ALL-IN');
@@ -400,16 +465,6 @@ const Game = function (name, host) {
         }
         this.rerender();
       }
-      // stage-by-stage logic.
-      // check if everyone folded but one
-      const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
-      if (numNonFolds == 1) {
-        // everyone folded, start new round, give pot to player
-        this.log('除一人外所有玩家弃牌');
-        nonFolderPlayer.money = this.getCurrentPot() + nonFolderPlayer.money;
-        this.endHandAllFold(nonFolderPlayer.getUsername());
-        handOver = true;
-      } else {
         if (this.roundData.bets.length == 1) {
           this.community.push(this.deck.dealRandomCard());
           this.community.push(this.deck.dealRandomCard());
@@ -432,115 +487,102 @@ const Game = function (name, host) {
         } else {
           this.log('本轮的阶段不存在!');
         }
-      }
     } else {
-      //this.log('阶段未完成');
-      //check if everyone folded except one player
-      const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
-      if (!handOver && numNonFolds == 1) {
-        // everyone folded, start new round, give pot to player
-        this.log('除一人外所有玩家弃牌');
-        nonFolderPlayer.money = this.getCurrentPot() + nonFolderPlayer.money;
-        this.endHandAllFold(nonFolderPlayer.getUsername());
-        handOver = true;
-      } else {
-        let currTurnIndex = 0;
-        //check if move just made was a fold
-        if (this.lastMoveParsed.move == 'Fold') {
-          currTurnIndex = this.players.findIndex(
-            (p) => p === this.lastMoveParsed.player
-          );
-          this.lastMoveParsed = { move: '', player: '' };
-        } else {
-          currTurnIndex = this.players.findIndex(
-            (p) => p.getStatus() === 'Their Turn'
-          );
-          this.players[currTurnIndex].setStatus('');
-        }
-        let count = 0; let A = 0;
-        do {
-          currTurnIndex = currTurnIndex + 1 < this.players.length ? currTurnIndex + 1 : 0;
-          count++;
-          
-          // 检查当前玩家是否在掉线列表中
-          const currentPlayer = this.players[currTurnIndex];
-          if (this.disconnectedPlayers.includes(currentPlayer)) {
-            // 如果玩家掉线，自动执行弃牌
-            currentPlayer.setStatus('Fold');
-            const currentBet = this.getPlayerBetInStage(currentPlayer);
-            this.foldPot = this.foldPot + currentBet;
-            
-            // 更新当前回合的下注记录
-            const currentRoundBets = this.getCurrentRoundBets();
-            if (currentRoundBets.some(bet => bet.player === currentPlayer.getUsername())) {
-              this.setCurrentRoundBets(
-                currentRoundBets.map(bet => 
-                  bet.player === currentPlayer.getUsername() 
-                    ? { player: currentPlayer.getUsername(), bet: 'Fold' }
-                    : bet
-                )
-              );
-            } else {
-              currentRoundBets.push({
-                player: currentPlayer.getUsername(),
-                bet: 'Fold'
-              });
-            }
-            
-            // 如果掉线玩家是大盲，标记大盲已行动
-            if (currentPlayer.getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
-              this.bigBlindWent = true;
-            }
-            
-            // 检查是否只剩下一个玩家未弃牌
-            const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
-            if (numNonFolds === 1) {
-              // 只剩下一个玩家，直接结束本局
-              nonFolderPlayer.money = this.getCurrentPot() + nonFolderPlayer.money;
-              this.endHandAllFold(nonFolderPlayer.getUsername());
-              return;
-            }
-            
-            // 检查当前阶段是否已完成
-            if (this.isStageComplete()) {
-              this.log('掉线玩家弃牌后，当前阶段已完成');
-              if (this.roundData.bets.length == 1) {
-                this.community.push(this.deck.dealRandomCard());
-                this.community.push(this.deck.dealRandomCard());
-                this.community.push(this.deck.dealRandomCard());
-                this.updateStage();
-              } else if (this.roundData.bets.length == 2) {
-                this.community.push(this.deck.dealRandomCard());
-                this.updateStage();
-              } else if (this.roundData.bets.length == 3) {
-                this.community.push(this.deck.dealRandomCard());
-                this.updateStage();
-              } else if (this.roundData.bets.length == 4) {
-                handOver = true;
-                const roundResults = this.evaluateWinners();
-                for (playerResult of roundResults.playersData) {
-                  playerResult.player.setStatus(playerResult.hand.name);
-                }
-                const winningData = this.distributeMoney(roundResults);
-                this.revealCards(winningData.filter((a) => a.winner));
-              }
-              A = 1;
-             // return;
-            }
-          }
-        } while (
-          (this.players[currTurnIndex].getStatus() == 'Fold' || 
-           this.players[currTurnIndex].allIn || 
-           this.disconnectedPlayers.includes(this.players[currTurnIndex]))
-          && count < 100
+      let currTurnIndex = 0;
+      //check if move just made was a fold
+      if (this.lastMoveParsed.move == 'Fold') {
+        currTurnIndex = this.players.findIndex(
+          (p) => p === this.lastMoveParsed.player
         );
-        if (A == 0) {
-          this.players[currTurnIndex].setStatus('Their Turn');
+        this.lastMoveParsed = { move: '', player: '' };
+      } else {
+        currTurnIndex = this.players.findIndex(
+          (p) => p.getStatus() === 'Their Turn'
+        );
+        this.players[currTurnIndex].setStatus('');
+      }
+      let count = 0; let A = 0;
+      do {
+        currTurnIndex = currTurnIndex + 1 < this.players.length ? currTurnIndex + 1 : 0;
+        count++;
+        
+        // 检查当前玩家是否在掉线列表中
+        const currentPlayer = this.players[currTurnIndex];
+        if (this.disconnectedPlayers.includes(currentPlayer)) {
+          this.log('moveOntoNextPlayer掉线处理');
+          // 如果玩家掉线，自动执行弃牌
+          currentPlayer.setStatus('Fold');
+          const currentBet = this.getPlayerBetInStage(currentPlayer);
+          this.foldPot = this.foldPot + currentBet;
+          
+          // 更新当前回合的下注记录
+          const currentRoundBets = this.getCurrentRoundBets();
+          if (currentRoundBets.some(bet => bet.player === currentPlayer.getUsername())) {
+            this.setCurrentRoundBets(
+              currentRoundBets.map(bet => 
+                bet.player === currentPlayer.getUsername() 
+                  ? { player: currentPlayer.getUsername(), bet: 'Fold' }
+                  : bet
+              )
+            );
+          } else {
+            currentRoundBets.push({
+              player: currentPlayer.getUsername(),
+              bet: 'Fold'
+            });
+          }
+          
+          // 如果掉线玩家是大盲，标记大盲已行动
+          if (currentPlayer.getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
+            this.bigBlindWent = true;
+          }
+          
+          // 检查是否只剩下一个玩家未弃牌
+          const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
+          if (numNonFolds === 1) {
+            // 只剩下一个玩家，直接结束本局
+            nonFolderPlayer.money = this.getCurrentPot() + nonFolderPlayer.money;
+            this.endHandAllFold(nonFolderPlayer.getUsername());
+            return;
+          }
+          
+          // 检查当前阶段是否已完成
+          if (this.isStageComplete()) {
+            this.log('掉线玩家弃牌后，当前阶段已完成');
+            if (this.roundData.bets.length == 1) {
+              this.community.push(this.deck.dealRandomCard());
+              this.community.push(this.deck.dealRandomCard());
+              this.community.push(this.deck.dealRandomCard());
+              this.updateStage();
+            } else if (this.roundData.bets.length == 2) {
+              this.community.push(this.deck.dealRandomCard());
+              this.updateStage();
+            } else if (this.roundData.bets.length == 3) {
+              this.community.push(this.deck.dealRandomCard());
+              this.updateStage();
+            } else if (this.roundData.bets.length == 4) {
+              handOver = true;
+              const roundResults = this.evaluateWinners();
+              for (playerResult of roundResults.playersData) {
+                playerResult.player.setStatus(playerResult.hand.name);
+              }
+              const winningData = this.distributeMoney(roundResults);
+              this.revealCards(winningData.filter((a) => a.winner));
+            }
+            A = 1;
+          }
         }
+      } while (
+        (this.players[currTurnIndex].getStatus() == 'Fold' || 
+         this.players[currTurnIndex].allIn || 
+         this.disconnectedPlayers.includes(this.players[currTurnIndex]))
+        && count < 100
+      );
+      if (A == 0) {
+        this.players[currTurnIndex].setStatus('Their Turn');
       }
     }
     if (!handOver) {
-      //this.log('正在重新渲染（moveOntoNextPlayer结束）\n');
       this.rerender();
     }
   };
@@ -773,6 +815,13 @@ const Game = function (name, host) {
       this.log(`${player.getUsername()}: ${initial} -> ${player.getMoney()} (${changeText})`);
     });
     this.log('================');
+    // 5秒后自动开始下一局
+    setTimeout(() => {
+      if (this.waitingPlayers && this.waitingPlayers.length > 0) {
+        this.addWaitingPlayersToGame();
+      }
+      this.startNewRound();
+    }, 10000);
   };
 
   this.revealCards = (winners) => {
@@ -803,7 +852,10 @@ const Game = function (name, host) {
       });
     }
     const winnersUsernames = winners
-      .map((a) => a.player.getUsername())
+      .map((a) => {
+        const gain = a.gain > 0 ? `(+${a.gain}<span style="color: #8B4513;">ⓜ</span>) ` : '';
+        return a.player.getUsername() + gain;
+      })
       .toString();
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
       this.players[pn].emit('reveal', {
@@ -824,14 +876,27 @@ const Game = function (name, host) {
       this.log(`${player.getUsername()}: ${initial} -> ${player.getMoney()} (${changeText})`);
     });
     this.log('================');
+    // 5秒后自动开始下一局
+    setTimeout(() => {
+      if (this.waitingPlayers && this.waitingPlayers.length > 0) {
+        this.addWaitingPlayersToGame();
+      }
+      this.startNewRound();
+    }, 10000);
   };
 
   this.allPlayersAllIn = () => {
     let participatingPlayers = 0;
+    let hasAllInPlayer = false;
     for (player of this.players) {
-      if (!player.allIn && player.getStatus() != 'Fold') participatingPlayers++;
+      if (player.allIn) {
+        hasAllInPlayer = true;
+      }
+      if (!player.allIn && player.getStatus() != 'Fold') {
+        participatingPlayers++;
+      }
     }
-    return participatingPlayers <= 1;
+    return hasAllInPlayer && participatingPlayers <= 1;
   };
 
   this.isStageComplete = () => {
@@ -1002,6 +1067,44 @@ const Game = function (name, host) {
     
     // 将玩家标记为断开连接
     this.disconnectedPlayers.push(player);
+    
+    // 如果玩家正在行动，直接弃牌
+    if (player.getStatus() === 'Their Turn') {
+      this.log('disconnectPlayer掉线处理');
+      const currentBet = this.getPlayerBetInStage(player);
+      this.foldPot = this.foldPot + currentBet;
+      
+      // 更新当前回合的下注记录
+      const currentRoundBets = this.getCurrentRoundBets();
+      if (currentRoundBets.some(bet => bet.player === player.getUsername())) {
+        this.setCurrentRoundBets(
+          currentRoundBets.map(bet => 
+            bet.player === player.getUsername() 
+              ? { player: player.getUsername(), bet: 'Fold' }
+              : bet
+          )
+        );
+      } else {
+        currentRoundBets.push({
+          player: player.getUsername(),
+          bet: 'Fold'
+        });
+      }
+      
+      // 设置玩家状态为弃牌
+      player.setStatus('Fold');
+      
+      // 如果掉线玩家是大盲，标记大盲已行动
+      if (player.getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
+        this.bigBlindWent = true;
+      }
+      this.lastMoveParsed = { move: 'Fold', player: player };
+      
+      // 移动到下一个玩家
+      if (this.roundInProgress) {
+        this.moveOntoNextPlayer();
+      }
+    }
     
     // 通知其他玩家该玩家已断开连接
     this.emitPlayers('playerDisconnected', { player: username });
