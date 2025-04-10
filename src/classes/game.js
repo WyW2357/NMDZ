@@ -51,12 +51,12 @@ const Game = function (name, host) {
   // 清空TeachData.txt
   this.clearTeachData = () => {
     try {
-        const teachDataPath = path.join(__dirname, '../../TeachData.txt');
-        const teachDataPath2 = path.join(__dirname, '../../TeachData2.txt');
-        fs.writeFileSync(teachDataPath, '');
-        fs.writeFileSync(teachDataPath2, '');
+      const teachDataPath = path.join(__dirname, '../../TeachData.txt');
+      const teachDataPath2 = path.join(__dirname, '../../TeachData2.txt');
+      fs.writeFileSync(teachDataPath, '');
+      fs.writeFileSync(teachDataPath2, '');
     } catch (error) {
-        console.error('清空TeachData.txt失败:', error);
+      console.error('清空TeachData.txt失败:', error);
     }
   }
 
@@ -65,20 +65,20 @@ const Game = function (name, host) {
     if (this.isWritingTeach) return;
     this.isWritingTeach = true;
     try {
-        const teachDataPath = path.join(__dirname, '../../TeachData.txt');
-        let logEntry;
-        
-        if (typeof data === 'string') {
-            logEntry = `${data}\n`;
-        } else {
-            logEntry = `${JSON.stringify(data, null, 2)}\n`;
-        }
-        
-        fs.appendFileSync(teachDataPath, logEntry);
+      const teachDataPath = path.join(__dirname, '../../TeachData.txt');
+      let logEntry;
+
+      if (typeof data === 'string') {
+        logEntry = `${data}\n`;
+      } else {
+        logEntry = `${JSON.stringify(data, null, 2)}\n`;
+      }
+
+      fs.appendFileSync(teachDataPath, logEntry);
     } catch (error) {
-        console.error('写入TeachData.txt失败:', error);
+      console.error('写入TeachData.txt失败:', error);
     } finally {
-        this.isWritingTeach = false;
+      this.isWritingTeach = false;
     }
   }
 
@@ -87,25 +87,25 @@ const Game = function (name, host) {
     if (this.isWritingTeach2) return;
     this.isWritingTeach2 = true;
     try {
-        const teachDataPath2 = path.join(__dirname, '../../TeachData2.txt');
-        let logEntry;
-        
-        if (typeof data === 'string') {
-            logEntry = `${data}\n`;
-        } else {
-            logEntry = `${JSON.stringify(data, null, 2)}\n`;
-        }
-        
-        fs.appendFileSync(teachDataPath2, logEntry);
+      const teachDataPath2 = path.join(__dirname, '../../TeachData2.txt');
+      let logEntry;
+
+      if (typeof data === 'string') {
+        logEntry = `${data}\n`;
+      } else {
+        logEntry = `${JSON.stringify(data, null, 2)}\n`;
+      }
+
+      fs.appendFileSync(teachDataPath2, logEntry);
     } catch (error) {
-        console.error('写入TeachData2.txt失败:', error);
+      console.error('写入TeachData2.txt失败:', error);
     } finally {
-        this.isWritingTeach2 = false;
+      this.isWritingTeach2 = false;
     }
   }
 
   // 清空GameData.txt
-  const logFile = path.join(__dirname, '../../GameData.txt');
+  const logFile = path.join(__dirname, `../../GameData_${this.gameName}.txt`);
   fs.writeFile(logFile, '', (err) => {
     if (err) {
       console.error('清空日志文件失败:', err);
@@ -117,22 +117,22 @@ const Game = function (name, host) {
     }
   });
 
-  const constructor = (function () {})(this);
+  const constructor = (function () { })(this);
 
   this.log = (...args) => {
     if (this.debug) {
       // 控制台输出
       console.log(...args);
-    }  
-      // 将日志加入队列
-      const logMessage = args.join(' ') + '\n';
-      this.logQueue.push(logMessage);
-      
-      // 如果当前没有在写入，则开始写入
-      if (!this.isWriting) {
-        this.writeLog();
-      }
-    
+    }
+    // 将日志加入队列
+    const logMessage = args.join(' ') + '\n';
+    this.logQueue.push(logMessage);
+
+    // 如果当前没有在写入，则开始写入
+    if (!this.isWriting) {
+      this.writeLog();
+    }
+
   };
 
   this.writeLog = () => {
@@ -143,8 +143,8 @@ const Game = function (name, host) {
 
     this.isWriting = true;
     const logMessage = this.logQueue.shift();
-    const logFile = path.join(__dirname, '../../GameData.txt');
-    
+    const logFile = path.join(__dirname, `../../GameData_${this.gameName}.txt`);
+
     fs.appendFile(logFile, logMessage, (err) => {
       if (err) {
         console.error('写入日志文件失败:', err);
@@ -164,9 +164,9 @@ const Game = function (name, host) {
         ? this.roundData.smallBlind + 1
         : 0;
 
-    this.log('庄家: ' + this.players[this.roundData.dealer].getUsername() + ' 小盲: ' + 
-    this.players[this.roundData.smallBlind].getUsername()  + ' 大盲: ' 
-    + this.players[this.roundData.bigBlind].getUsername());
+    this.log('庄家: ' + this.players[this.roundData.dealer].getUsername() + ' 小盲: ' +
+      this.players[this.roundData.smallBlind].getUsername() + ' 大盲: '
+      + this.players[this.roundData.bigBlind].getUsername());
 
     for (let i = 0; i < this.players.length; i++) {
       this.players[i].setDealer(i === this.roundData.dealer);
@@ -182,8 +182,8 @@ const Game = function (name, host) {
 
     const goFirstIndex =
       this.roundData.bigBlind + 1 < this.players.length
-      ? this.roundData.bigBlind + 1
-      : 0;
+        ? this.roundData.bigBlind + 1
+        : 0;
     this.roundData.turn = this.players[goFirstIndex].getUsername();
     this.players[goFirstIndex].setStatus('Their Turn');
     this.startActionTimer(this.players[goFirstIndex]);
@@ -251,20 +251,20 @@ const Game = function (name, host) {
     this.players.forEach((player, index) => {
       this.log(`${player.getUsername()}  筹码: ${player.getMoney()} 买入: ${player.buyIns} 手牌: ${player.cards.map(card => `${card.getValue()}${card.getSuit()}`).join(' ')}`);
     });
-      this.players[this.roundData.bigBlind].money =
-        this.players[this.roundData.bigBlind].money - this.bigBlind;
-      this.roundData.bets.push([
-        {
-          player: this.players[this.roundData.bigBlind].getUsername(),
-          bet: this.bigBlind,
-        },
-      ])
-      this.players[this.roundData.smallBlind].money =
-        this.players[this.roundData.smallBlind].money - this.smallBlind;
-      this.roundData.bets[0].push({
-        player: this.players[this.roundData.smallBlind].getUsername(),
-        bet: this.smallBlind,
-      });
+    this.players[this.roundData.bigBlind].money =
+      this.players[this.roundData.bigBlind].money - this.bigBlind;
+    this.roundData.bets.push([
+      {
+        player: this.players[this.roundData.bigBlind].getUsername(),
+        bet: this.bigBlind,
+      },
+    ])
+    this.players[this.roundData.smallBlind].money =
+      this.players[this.roundData.smallBlind].money - this.smallBlind;
+    this.roundData.bets[0].push({
+      player: this.players[this.roundData.smallBlind].getUsername(),
+      bet: this.smallBlind,
+    });
 
     this.roundNum++;
     this.rerender();
@@ -275,7 +275,7 @@ const Game = function (name, host) {
     let playersDataToAI = [];
     let handStrength = '';
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
-      if(this.community.length > 0) {
+      if (this.community.length > 0) {
         const hand = Hand.solve(this.convertCardsFormat(this.players[pn].cards.concat(this.community)));
         if (hand.name === 'High Card') handStrength = '高牌';
         else if (hand.name === 'Pair') handStrength = '一对';
@@ -288,7 +288,7 @@ const Game = function (name, host) {
         else if (hand.name === 'Straight Flush') handStrength = '同花顺';
         else if (hand.name === 'Royal Flush') handStrength = '皇家同花顺';
       }
-      
+
       playersData.push({
         username: this.players[pn].getUsername(),
         status: this.players[pn].getStatus(),
@@ -325,17 +325,17 @@ const Game = function (name, host) {
       });
     }
     this.log('================');
-    
+
 
     // 添加公牌信息
     if (this.community.length > 0) {
       this.log(this.getStageName() + ' 底池: ' + this.getCurrentPot() + ' 公牌: ' +
-      this.community.map(card => `${card.getValue()}${card.getSuit()}`).join(' '));
+        this.community.map(card => `${card.getValue()}${card.getSuit()}`).join(' '));
     }
     else {
       this.log(this.getStageName() + ' 底池: ' + this.getCurrentPot());
     }
-    
+
     this.players.forEach((player, index) => {
       this.log(`${player.getUsername()}(${player.getMoney()} ${player.buyIns}) ${player.cards.map(card => `${card.getValue()}${card.getSuit()}`).join(' ')}  状态: ${player.getStatus()}`);
     });
@@ -470,13 +470,13 @@ const Game = function (name, host) {
         if (this.players[i].getStatus() !== 'Fold') {
           const currentBet = this.getPlayerBetInStage(this.players[i]);
           this.foldPot = this.foldPot + currentBet;
-          
+
           // 更新当前回合的下注记录
           const currentRoundBets = this.getCurrentRoundBets();
           if (currentRoundBets.some(bet => bet.player === this.players[i].getUsername())) {
             this.setCurrentRoundBets(
-              currentRoundBets.map(bet => 
-                bet.player === this.players[i].getUsername() 
+              currentRoundBets.map(bet =>
+                bet.player === this.players[i].getUsername()
                   ? { player: this.players[i].getUsername(), bet: 'Fold' }
                   : bet
               )
@@ -487,10 +487,10 @@ const Game = function (name, host) {
               bet: 'Fold'
             });
           }
-          
+
           // 设置玩家状态为弃牌
           this.players[i].setStatus('Fold');
-          
+
           // 如果掉线玩家是大盲，标记大盲已行动
           if (this.players[i].getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
             this.bigBlindWent = true;
@@ -516,7 +516,7 @@ const Game = function (name, host) {
 
   this.moveOntoNextPlayer = () => {
     let handOver = false;
-    
+
     // 首先检查是否只剩一个玩家未弃牌
     const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
     if (numNonFolds == 1) {
@@ -546,28 +546,28 @@ const Game = function (name, host) {
         }
         this.rerender();
       }
-        if (this.roundData.bets.length == 1) {
-          this.community.push(this.deck.dealRandomCard());
-          this.community.push(this.deck.dealRandomCard());
-          this.community.push(this.deck.dealRandomCard());
-          this.updateStage();
-        } else if (this.roundData.bets.length == 2) {
-          this.community.push(this.deck.dealRandomCard());
-          this.updateStage();
-        } else if (this.roundData.bets.length == 3) {
-          this.community.push(this.deck.dealRandomCard());
-          this.updateStage();
-        } else if (this.roundData.bets.length == 4) {
-          handOver = true;
-          const roundResults = this.evaluateWinners();
-          for (playerResult of roundResults.playersData) {
-            playerResult.player.setStatus(playerResult.hand.name);
-          }
-          const winningData = this.distributeMoney(roundResults);
-          this.revealCards(winningData.filter((a) => a.winner));
-        } else {
-          this.log('本轮的阶段不存在!');
+      if (this.roundData.bets.length == 1) {
+        this.community.push(this.deck.dealRandomCard());
+        this.community.push(this.deck.dealRandomCard());
+        this.community.push(this.deck.dealRandomCard());
+        this.updateStage();
+      } else if (this.roundData.bets.length == 2) {
+        this.community.push(this.deck.dealRandomCard());
+        this.updateStage();
+      } else if (this.roundData.bets.length == 3) {
+        this.community.push(this.deck.dealRandomCard());
+        this.updateStage();
+      } else if (this.roundData.bets.length == 4) {
+        handOver = true;
+        const roundResults = this.evaluateWinners();
+        for (playerResult of roundResults.playersData) {
+          playerResult.player.setStatus(playerResult.hand.name);
         }
+        const winningData = this.distributeMoney(roundResults);
+        this.revealCards(winningData.filter((a) => a.winner));
+      } else {
+        this.log('本轮的阶段不存在!');
+      }
     } else {
       let currTurnIndex = 0;
       //check if move just made was a fold
@@ -586,7 +586,7 @@ const Game = function (name, host) {
       do {
         currTurnIndex = currTurnIndex + 1 < this.players.length ? currTurnIndex + 1 : 0;
         count++;
-        
+
         // 检查当前玩家是否在掉线列表中
         const currentPlayer = this.players[currTurnIndex];
         if (this.disconnectedPlayers.includes(currentPlayer)) {
@@ -595,13 +595,13 @@ const Game = function (name, host) {
           currentPlayer.setStatus('Fold');
           const currentBet = this.getPlayerBetInStage(currentPlayer);
           this.foldPot = this.foldPot + currentBet;
-          
+
           // 更新当前回合的下注记录
           const currentRoundBets = this.getCurrentRoundBets();
           if (currentRoundBets.some(bet => bet.player === currentPlayer.getUsername())) {
             this.setCurrentRoundBets(
-              currentRoundBets.map(bet => 
-                bet.player === currentPlayer.getUsername() 
+              currentRoundBets.map(bet =>
+                bet.player === currentPlayer.getUsername()
                   ? { player: currentPlayer.getUsername(), bet: 'Fold' }
                   : bet
               )
@@ -612,12 +612,12 @@ const Game = function (name, host) {
               bet: 'Fold'
             });
           }
-          
+
           // 如果掉线玩家是大盲，标记大盲已行动
           if (currentPlayer.getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
             this.bigBlindWent = true;
           }
-          
+
           // 检查是否只剩下一个玩家未弃牌
           const [numNonFolds, nonFolderPlayer] = this.getNonFoldedPlayer();
           if (numNonFolds === 1) {
@@ -626,7 +626,7 @@ const Game = function (name, host) {
             this.endHandAllFold(nonFolderPlayer.getUsername());
             return;
           }
-          
+
           // 检查当前阶段是否已完成
           if (this.isStageComplete()) {
             this.log('掉线玩家弃牌后，当前阶段已完成');
@@ -654,9 +654,9 @@ const Game = function (name, host) {
           }
         }
       } while (
-        (this.players[currTurnIndex].getStatus() == 'Fold' || 
-         this.players[currTurnIndex].allIn || 
-         this.disconnectedPlayers.includes(this.players[currTurnIndex]))
+        (this.players[currTurnIndex].getStatus() == 'Fold' ||
+          this.players[currTurnIndex].allIn ||
+          this.disconnectedPlayers.includes(this.players[currTurnIndex]))
         && count < 100
       );
       if (A == 0) {
@@ -735,34 +735,34 @@ const Game = function (name, host) {
       const winners = playerInvestments.filter(
         (p) => p.handStrength === maxHand && p.live
       );
-      
-        const baseAmount = Math.trunc(winnerPot / winners.length);  // 直接使用整数除法
-        const remainder = winnerPot % winners.length;
-        // 找到离庄家最近的赢家
-        let closestToDealer = winners[0];
-        let minDistance = 20;
-        
-        for (const winner of winners) {
-          const seat = this.players.findIndex(p => p === winner.player);
-          const distance = (seat - this.roundData.dealer) >= 0 ? (seat - this.roundData.dealer) : (seat - this.roundData.dealer + this.players.length);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestToDealer = winner;
-          }
+
+      const baseAmount = Math.trunc(winnerPot / winners.length);  // 直接使用整数除法
+      const remainder = winnerPot % winners.length;
+      // 找到离庄家最近的赢家
+      let closestToDealer = winners[0];
+      let minDistance = 20;
+
+      for (const winner of winners) {
+        const seat = this.players.findIndex(p => p === winner.player);
+        const distance = (seat - this.roundData.dealer) >= 0 ? (seat - this.roundData.dealer) : (seat - this.roundData.dealer + this.players.length);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestToDealer = winner;
         }
-        
-        // 分配奖金
-        for (const winner of winners) {
-          winner.result += baseAmount;
-        }
-        
-        // 将余数给离庄家最近的赢家
-        if (remainder > 0) {
-          closestToDealer.result += remainder;
-        }
+      }
+
+      // 分配奖金
+      for (const winner of winners) {
+        winner.result += baseAmount;
+      }
+
+      // 将余数给离庄家最近的赢家
+      if (remainder > 0) {
+        closestToDealer.result += remainder;
+      }
       playerInvestments = playerInvestments.filter((p) => p.invested > 0);
       winnerPot = 0;
-  }
+    }
     if (playerInvestments.length === 1) {
       let p = playerInvestments[0];
       p.result += winnerPot + p.invested;
@@ -917,7 +917,7 @@ const Game = function (name, host) {
       const money = this.players[i].getMoney();
       const buyIns = this.players[i].buyIns;
       const profit = money - 50 - (50 * (buyIns || 0));
-      
+
       // 更新统计信息
       this.playerStats[this.players[i].getUsername()] = {
         money,
@@ -925,7 +925,7 @@ const Game = function (name, host) {
         profit,
         lastUpdate: Date.now()
       };
-      
+
       cardData.push({
         username: this.players[i].getUsername(),
         cards: this.players[i].cards,
@@ -1062,19 +1062,19 @@ const Game = function (name, host) {
     const BBPlayer = this.players.find(player => player.getUsername() === this.BBname);
     const CCPlayer = this.players.find(player => player.getUsername() === this.CCname);
     if (AAPlayer && this.AA) {
-        this.deck.cards = this.deck.cards.filter(card => 
-          !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
-        );
+      this.deck.cards = this.deck.cards.filter(card =>
+        !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
+      );
     }
     if (BBPlayer && this.BB) {
-        this.deck.cards = this.deck.cards.filter(card => 
-          !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
-        );
+      this.deck.cards = this.deck.cards.filter(card =>
+        !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
+      );
     }
     if (CCPlayer && this.CC) {
-        this.deck.cards = this.deck.cards.filter(card => 
-          !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
-        );
+      this.deck.cards = this.deck.cards.filter(card =>
+        !(card.getValue() === 'A' && (card.getSuit() === '♠' || card.getSuit() === '♥'))
+      );
     }
 
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
@@ -1150,22 +1150,22 @@ const Game = function (name, host) {
       profit,
       lastUpdate: Date.now()
     };
-    
+
     // 将玩家标记为断开连接
     this.disconnectedPlayers.push(player);
-    
+
     // 如果玩家正在行动，直接弃牌
     if (player.getStatus() === 'Their Turn') {
       this.log('disconnectPlayer掉线处理');
       const currentBet = this.getPlayerBetInStage(player);
       this.foldPot = this.foldPot + currentBet;
-      
+
       // 更新当前回合的下注记录
       const currentRoundBets = this.getCurrentRoundBets();
       if (currentRoundBets.some(bet => bet.player === player.getUsername())) {
         this.setCurrentRoundBets(
-          currentRoundBets.map(bet => 
-            bet.player === player.getUsername() 
+          currentRoundBets.map(bet =>
+            bet.player === player.getUsername()
               ? { player: player.getUsername(), bet: 'Fold' }
               : bet
           )
@@ -1176,22 +1176,22 @@ const Game = function (name, host) {
           bet: 'Fold'
         });
       }
-      
+
       // 设置玩家状态为弃牌
       player.setStatus('Fold');
-      
+
       // 如果掉线玩家是大盲，标记大盲已行动
       if (player.getBlind() === 'Big Blind' && this.roundData.bets.length === 1) {
         this.bigBlindWent = true;
       }
       this.lastMoveParsed = { move: 'Fold', player: player };
-      
+
       // 移动到下一个玩家
       if (this.roundInProgress) {
         this.moveOntoNextPlayer();
       }
     }
-    
+
     // 通知其他玩家该玩家已断开连接
     this.emitPlayers('playerDisconnected', { player: username });
     this.emitPlayers('joinRoomUpdate', {
@@ -1234,7 +1234,7 @@ const Game = function (name, host) {
     player.setStatus('Fold');
     this.foldPot = this.foldPot + preFoldBetAmount;
     this.log(`${player.getUsername()} [弃牌]`);
-    
+
     if (
       this.getCurrentRoundBets().some((a) => a.player == player.getUsername())
     ) {
@@ -1252,7 +1252,7 @@ const Game = function (name, host) {
       });
     }
     this.lastMoveParsed = { move: 'Fold', player: player };
-    
+
     // 记录teacher的行动
     if (player.getUsername() === 'wy') {
       const teachData = {
@@ -1260,7 +1260,7 @@ const Game = function (name, host) {
       };
       this.writeToTeachFile2(teachData);
     }
-    
+
     this.moveOntoNextPlayer();
     return true;
   };
@@ -1314,7 +1314,7 @@ const Game = function (name, host) {
           player.money = player.money - topBet;
         }
       }
-      
+
       // 记录teacher的行动
       if (player.getUsername() === 'wy') {
         const teachData = {
@@ -1322,7 +1322,7 @@ const Game = function (name, host) {
         };
         this.writeToTeachFile2(teachData);
       }
-      
+
       this.moveOntoNextPlayer();
       return true;
     } else {
@@ -1334,9 +1334,9 @@ const Game = function (name, host) {
             this.getCurrentRoundBets().map((a) =>
               a.player == player.username
                 ? {
-                    player: player.getUsername(),
-                    bet: player.getMoney() + currBet,
-                  }
+                  player: player.getUsername(),
+                  bet: player.getMoney() + currBet,
+                }
                 : a
             )
           );
@@ -1355,15 +1355,15 @@ const Game = function (name, host) {
           player.money = player.money - (topBet - currBet);
           this.moveOntoNextPlayer();
         }
-        
-      // 记录teacher的行动
-      if (player.getUsername() === 'wy') {
-        const teachData = {
-          action: 'Call'
-        };
-        this.writeToTeachFile2(teachData);
-      }
-      
+
+        // 记录teacher的行动
+        if (player.getUsername() === 'wy') {
+          const teachData = {
+            action: 'Call'
+          };
+          this.writeToTeachFile2(teachData);
+        }
+
         return true;
       } else {
         this.log('这不应该发生');
@@ -1392,7 +1392,7 @@ const Game = function (name, host) {
           player.allIn = true;
           this.log(`[全押] 玩家 ${player.getUsername()} 全押`);
         }
-        
+
         // 记录teacher的行动
         if (player.getUsername() === 'wy') {
           const teachData = {
@@ -1400,7 +1400,7 @@ const Game = function (name, host) {
           };
           this.writeToTeachFile2(teachData);
         }
-        
+
         this.moveOntoNextPlayer();
         return true;
       }
@@ -1413,7 +1413,7 @@ const Game = function (name, host) {
     let currBet = 0;
     const player = this.findPlayer(socket.id);
     this.log(`${player.getUsername()} [过牌]`);
-    
+
     if (
       this.getCurrentRoundBets().find(
         (a) => a.player == player.getUsername()
@@ -1435,7 +1435,7 @@ const Game = function (name, host) {
         bet: currBet,
       });
     }
-    
+
     // 记录teacher的行动
     if (player.getUsername() === 'wy') {
       const teachData = {
@@ -1443,7 +1443,7 @@ const Game = function (name, host) {
       };
       this.writeToTeachFile2(teachData);
     }
-    
+
     this.moveOntoNextPlayer();
     return true;
   };
@@ -1456,7 +1456,7 @@ const Game = function (name, host) {
     const currBet = this.getPlayerBetInStage(player);
     const moneyToRemove = bet - currBet;
     this.log(`${player.getUsername()} [加注] ${currBet} -> ${bet}`);
-    
+
     if (
       moneyToRemove > 0 &&
       bet >= topBet &&
@@ -1486,7 +1486,7 @@ const Game = function (name, host) {
         player.allIn = true;
         this.log(`${player.getUsername()} ALL-IN`);
       }
-      
+
       // 记录teacher的行动
       if (player.getUsername() === 'wy') {
         const teachData = {
@@ -1494,7 +1494,7 @@ const Game = function (name, host) {
         };
         this.writeToTeachFile2(teachData);
       }
-      
+
       this.moveOntoNextPlayer();
       return true;
     }
@@ -1546,12 +1546,12 @@ const Game = function (name, host) {
 
   this.addWaitingPlayersToGame = () => {
     if (this.waitingPlayers.length === 0) return;
-    
+
     this.log('将等待中的玩家加入游戏');
-    
+
     for (const waitingPlayer of this.waitingPlayers) {
       const player = new Player(waitingPlayer.username, waitingPlayer.socket, this.debug);
-      
+
       // 检查是否有同名玩家的历史记录
       if (this.playerStats[waitingPlayer.username]) {
         // 继承历史记录
@@ -1559,19 +1559,19 @@ const Game = function (name, host) {
         player.buyIns = this.playerStats[waitingPlayer.username].buyIns;
         this.log(`玩家 ${waitingPlayer.username} 中途加入游戏，继承历史记录`);
       }
-      
+
       this.players.push(player);
       this.log('玩家 ' + waitingPlayer.username + ' 已从等待列表加入游戏');
-      
+
       // 通知等待玩家已加入游戏
       waitingPlayer.socket.emit('waitingPlayerJoined', {
         players: this.getPlayersArray()
       });
     }
-    
+
     // 清空等待列表
     this.waitingPlayers = [];
-    
+
     // 通知所有玩家有新玩家加入
     this.emitPlayers('playerJoined', {
       players: this.getPlayersArray()
@@ -1592,7 +1592,7 @@ const Game = function (name, host) {
         profit,
         lastUpdate: Date.now()
       };
-      
+
       this.players = this.players.filter((p) => p.id != socket.id);
       this.log('玩家 ' + player.getUsername() + ' 离开游戏');
       this.emitToAll('playerDisconnected', { player: player.getUsername() });
@@ -1603,7 +1603,7 @@ const Game = function (name, host) {
   this.startActionTimer = (player) => {
     // 清除之前的计时器
     this.clearActionTimer(player);
-    
+
     // 设置新的计时器
     const timer = setTimeout(() => {
       if (player.getStatus() === 'Their Turn') {
@@ -1616,10 +1616,10 @@ const Game = function (name, host) {
         }, 100);
       }
     }, 30000); // 30秒超时
-    
+
     this.actionTimers.set(player.getUsername(), timer);
   }
-  
+
   // 清除玩家行动计时器
   this.clearActionTimer = (player) => {
     const timer = this.actionTimers.get(player.getUsername());

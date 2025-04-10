@@ -580,7 +580,7 @@ function renderOpponent(name, data) {
   var textTest = '';
   if (data.text == '')
     textTest = '';
-  if (data.text == 'Their Turn'){
+  if (data.text == 'Their Turn') {
     // 添加倒计时显示
     let countdown = 30;
     textTest = '行动中 <span class="countdown-number" style="color: black;">30</span>';
@@ -1097,7 +1097,7 @@ function renderSelf(data) {
   $('#blindStatus').text(blindTest);
 }
 
-socket.on('closeRaiseWindow', function() {
+socket.on('closeRaiseWindow', function () {
   // 关闭加注窗口
   $('#raiseModal').hide();
   $('#betModal').hide();
