@@ -45,7 +45,7 @@ def load_output_data(file_path):
             features.append(feature)
     return np.array(features)
 
-def train_model(model, input_data, output_data, num_epochs=5000, learning_rate=0.01):
+def train_model(model, input_data, output_data, num_epochs=1000, learning_rate=0.01):
     """训练模型"""
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)

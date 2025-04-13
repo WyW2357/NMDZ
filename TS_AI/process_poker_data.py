@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 # 德州扑克最大玩家数量
-MAX_PLAYERS = 9
+MAX_PLAYERS = 11
 # 德州扑克最大轮数
 MAX_ROUNDS = 4
 # 德州扑克最大公共牌数量
