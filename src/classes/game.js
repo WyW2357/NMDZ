@@ -37,6 +37,8 @@ const Game = function (name, host) {
   this.playerStats = {}; // 添加全局统计记录
   this.logQueue = [];  // 添加日志队列
   this.isWriting = false;  // 添加写入锁
+  this.isWritingTeach = false;  // TeachData写入锁
+  this.isWritingTeach2 = false;  // TeachData2写入锁
   this.AA = true;
   this.BB = true;
   this.CC = true;
@@ -44,6 +46,62 @@ const Game = function (name, host) {
   this.BBname = '2';
   this.CCname = '3';
   this.initialMoney = new Map();  // 添加全局变量记录初始金额
+
+  // 清空TeachData.txt
+  this.clearTeachData = () => {
+    try {
+        const teachDataPath = path.join(__dirname, '../../TeachData.txt');
+        const teachDataPath2 = path.join(__dirname, '../../TeachData2.txt');
+        fs.writeFileSync(teachDataPath, '');
+        fs.writeFileSync(teachDataPath2, '');
+    } catch (error) {
+        console.error('清空TeachData.txt失败:', error);
+    }
+  }
+
+  // 写入数据到TeachData.txt
+  this.writeToTeachFile = (data) => {
+    if (this.isWritingTeach) return;
+    this.isWritingTeach = true;
+    try {
+        const teachDataPath = path.join(__dirname, '../../TeachData.txt');
+        let logEntry;
+        
+        if (typeof data === 'string') {
+            logEntry = `${data}\n`;
+        } else {
+            logEntry = `${JSON.stringify(data, null, 2)}\n`;
+        }
+        
+        fs.appendFileSync(teachDataPath, logEntry);
+    } catch (error) {
+        console.error('写入TeachData.txt失败:', error);
+    } finally {
+        this.isWritingTeach = false;
+    }
+  }
+
+  // 写入数据到TeachData2.txt
+  this.writeToTeachFile2 = (data) => {
+    if (this.isWritingTeach2) return;
+    this.isWritingTeach2 = true;
+    try {
+        const teachDataPath2 = path.join(__dirname, '../../TeachData2.txt');
+        let logEntry;
+        
+        if (typeof data === 'string') {
+            logEntry = `${data}\n`;
+        } else {
+            logEntry = `${JSON.stringify(data, null, 2)}\n`;
+        }
+        
+        fs.appendFileSync(teachDataPath2, logEntry);
+    } catch (error) {
+        console.error('写入TeachData2.txt失败:', error);
+    } finally {
+        this.isWritingTeach2 = false;
+    }
+  }
 
   // 清空GameData.txt
   const logFile = path.join(__dirname, '../../GameData.txt');
@@ -212,6 +270,7 @@ const Game = function (name, host) {
 
   this.rerender = () => {
     let playersData = [];
+    let playersDataToAI = [];
     let handStrength = '';
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
       if(this.community.length > 0) {
@@ -237,6 +296,11 @@ const Game = function (name, host) {
         isChecked: this.playerIsChecked(this.players[pn]),
         strength: handStrength
       });
+      playersDataToAI.push({
+        username: this.players[pn].getUsername(),
+        blind: this.players[pn].getBlind(),
+        money: this.players[pn].getMoney(),
+      });
     }
     for (let pn = 0; pn < this.getNumPlayers(); pn++) {
       this.players[pn].emit('rerender', {
@@ -254,12 +318,13 @@ const Game = function (name, host) {
         myBlind: this.players[pn].getBlind(),
         roundInProgress: this.roundInProgress,
         buyIns: this.players[pn].buyIns,
-        strength: playersData[pn].strength
+        strength: playersData[pn].strength,
+        playersToAI: playersDataToAI
       });
     }
     this.log('================');
     
-    
+
     // 添加公牌信息
     if (this.community.length > 0) {
       this.log(this.getStageName() + ' 底池: ' + this.getCurrentPot() + ' 公牌: ' +
@@ -272,6 +337,19 @@ const Game = function (name, host) {
     this.players.forEach((player, index) => {
       this.log(`${player.getUsername()}(${player.getMoney()} ${player.buyIns}) ${player.cards.map(card => `${card.getValue()}${card.getSuit()}`).join(' ')}  状态: ${player.getStatus()}`);
     });
+
+    // 记录teacher信息到TeachData
+    const teacher = this.players.find(p => p.getUsername() === 'wy');
+    if (teacher && teacher.getStatus() === 'Their Turn') {
+      const teachData = {
+        mycards: teacher.cards,
+        community: this.community,
+        bets: this.roundData.bets,
+        pot: this.getCurrentPot(),
+        playersToAI: playersDataToAI,
+      };
+      this.writeToTeachFile(teachData);
+    }
   };
 
   this.getCurrentPot = () => {
@@ -960,7 +1038,8 @@ const Game = function (name, host) {
   };
 
   this.startGame = () => {
-    this.dealCards();
+    //this.dealCards();
+    this.clearTeachData();
     this.emitPlayers('startGame', {
       players: this.players.map((p) => {
         return p.username;
@@ -1165,6 +1244,15 @@ const Game = function (name, host) {
       });
     }
     this.lastMoveParsed = { move: 'Fold', player: player };
+    
+    // 记录teacher的行动
+    if (player.getUsername() === 'wy') {
+      const teachData = {
+        action: 'Fold'
+      };
+      this.writeToTeachFile2(teachData);
+    }
+    
     this.moveOntoNextPlayer();
     return true;
   };
@@ -1217,6 +1305,15 @@ const Game = function (name, host) {
           player.money = player.money - topBet;
         }
       }
+      
+      // 记录teacher的行动
+      if (player.getUsername() === 'wy') {
+        const teachData = {
+          action: 'Call'
+        };
+        this.writeToTeachFile2(teachData);
+      }
+      
       this.moveOntoNextPlayer();
       return true;
     } else {
@@ -1249,6 +1346,15 @@ const Game = function (name, host) {
           player.money = player.money - (topBet - currBet);
           this.moveOntoNextPlayer();
         }
+        
+      // 记录teacher的行动
+      if (player.getUsername() === 'wy') {
+        const teachData = {
+          action: 'Call'
+        };
+        this.writeToTeachFile2(teachData);
+      }
+      
         return true;
       } else {
         this.log('这不应该发生');
@@ -1276,6 +1382,15 @@ const Game = function (name, host) {
           player.allIn = true;
           this.log(`[全押] 玩家 ${player.getUsername()} 全押`);
         }
+        
+        // 记录teacher的行动
+        if (player.getUsername() === 'wy') {
+          const teachData = {
+            action: 'Raise'
+          };
+          this.writeToTeachFile2(teachData);
+        }
+        
         this.moveOntoNextPlayer();
         return true;
       }
@@ -1309,6 +1424,15 @@ const Game = function (name, host) {
         bet: currBet,
       });
     }
+    
+    // 记录teacher的行动
+    if (player.getUsername() === 'wy') {
+      const teachData = {
+        action: 'Check'
+      };
+      this.writeToTeachFile2(teachData);
+    }
+    
     this.moveOntoNextPlayer();
     return true;
   };
@@ -1350,6 +1474,15 @@ const Game = function (name, host) {
         player.allIn = true;
         this.log(`${player.getUsername()} ALL-IN`);
       }
+      
+      // 记录teacher的行动
+      if (player.getUsername() === 'wy') {
+        const teachData = {
+          action: 'Raise'
+        };
+        this.writeToTeachFile2(teachData);
+      }
+      
       this.moveOntoNextPlayer();
       return true;
     }

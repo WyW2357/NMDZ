@@ -1,0 +1,1008 @@
+{
+  "mycards": [
+    {
+      "value": 7,
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♣"
+    }
+  ],
+  "community": [],
+  "bets": [
+    [
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      },
+      {
+        "player": "111",
+        "bet": 2
+      }
+    ]
+  ],
+  "pot": 5,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "",
+      "money": 48
+    },
+    {
+      "username": "222",
+      "blind": "Small Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Big Blind",
+      "money": 48
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 7,
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♣"
+    }
+  ],
+  "community": [
+    {
+      "value": "A",
+      "suit": "♣"
+    },
+    {
+      "value": "K",
+      "suit": "♥"
+    },
+    {
+      "value": 7,
+      "suit": "♠"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      },
+      {
+        "player": "111",
+        "bet": 2
+      }
+    ],
+    []
+  ],
+  "pot": 5,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "",
+      "money": 48
+    },
+    {
+      "username": "222",
+      "blind": "Small Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Big Blind",
+      "money": 48
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 7,
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♣"
+    }
+  ],
+  "community": [
+    {
+      "value": "A",
+      "suit": "♣"
+    },
+    {
+      "value": "K",
+      "suit": "♥"
+    },
+    {
+      "value": 7,
+      "suit": "♠"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      },
+      {
+        "player": "111",
+        "bet": 2
+      }
+    ],
+    [
+      {
+        "player": "wy",
+        "bet": 0
+      },
+      {
+        "player": "111",
+        "bet": 3
+      }
+    ]
+  ],
+  "pot": 8,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "",
+      "money": 45
+    },
+    {
+      "username": "222",
+      "blind": "Small Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Big Blind",
+      "money": 48
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 5,
+      "suit": "♣"
+    },
+    {
+      "value": 10,
+      "suit": "♥"
+    }
+  ],
+  "community": [],
+  "bets": [
+    [
+      {
+        "player": "111",
+        "bet": 2
+      },
+      {
+        "player": "wy",
+        "bet": 1
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      }
+    ]
+  ],
+  "pot": 3,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Big Blind",
+      "money": 51
+    },
+    {
+      "username": "222",
+      "blind": "",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Small Blind",
+      "money": 47
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 5,
+      "suit": "♠"
+    },
+    {
+      "value": 9,
+      "suit": "♦"
+    }
+  ],
+  "community": [],
+  "bets": [
+    [
+      {
+        "player": "222",
+        "bet": 2
+      },
+      {
+        "player": "111",
+        "bet": 1
+      }
+    ]
+  ],
+  "pot": 3,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Small Blind",
+      "money": 53
+    },
+    {
+      "username": "222",
+      "blind": "Big Blind",
+      "money": 47
+    },
+    {
+      "username": "wy",
+      "blind": "",
+      "money": 47
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 4,
+      "suit": "♥"
+    },
+    {
+      "value": 7,
+      "suit": "♥"
+    }
+  ],
+  "community": [],
+  "bets": [
+    [
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      },
+      {
+        "player": "111",
+        "bet": 2
+      }
+    ]
+  ],
+  "pot": 5,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "",
+      "money": 51
+    },
+    {
+      "username": "222",
+      "blind": "Small Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Big Blind",
+      "money": 45
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 4,
+      "suit": "♥"
+    },
+    {
+      "value": 7,
+      "suit": "♥"
+    }
+  ],
+  "community": [
+    {
+      "value": "K",
+      "suit": "♦"
+    },
+    {
+      "value": 5,
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♥"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      },
+      {
+        "player": "111",
+        "bet": 2
+      }
+    ],
+    []
+  ],
+  "pot": 5,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "",
+      "money": 51
+    },
+    {
+      "username": "222",
+      "blind": "Small Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Big Blind",
+      "money": 45
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 4,
+      "suit": "♥"
+    },
+    {
+      "value": 7,
+      "suit": "♥"
+    }
+  ],
+  "community": [
+    {
+      "value": "K",
+      "suit": "♦"
+    },
+    {
+      "value": 5,
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♥"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": "Fold"
+      },
+      {
+        "player": "111",
+        "bet": 2
+      }
+    ],
+    [
+      {
+        "player": "wy",
+        "bet": 0
+      },
+      {
+        "player": "111",
+        "bet": 5
+      }
+    ]
+  ],
+  "pot": 10,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "",
+      "money": 46
+    },
+    {
+      "username": "222",
+      "blind": "Small Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "Big Blind",
+      "money": 45
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": "K",
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    }
+  ],
+  "community": [],
+  "bets": [
+    [
+      {
+        "player": "111",
+        "bet": 2
+      },
+      {
+        "player": "wy",
+        "bet": 1
+      },
+      {
+        "player": "222",
+        "bet": 2
+      }
+    ]
+  ],
+  "pot": 5,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Big Blind",
+      "money": 54
+    },
+    {
+      "username": "222",
+      "blind": "",
+      "money": 47
+    },
+    {
+      "username": "wy",
+      "blind": "Small Blind",
+      "money": 44
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": "K",
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    }
+  ],
+  "community": [
+    {
+      "value": 2,
+      "suit": "♣"
+    },
+    {
+      "value": 5,
+      "suit": "♦"
+    },
+    {
+      "value": 7,
+      "suit": "♠"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "111",
+        "bet": 2
+      },
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": 2
+      }
+    ],
+    []
+  ],
+  "pot": 6,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Big Blind",
+      "money": 54
+    },
+    {
+      "username": "222",
+      "blind": "",
+      "money": 47
+    },
+    {
+      "username": "wy",
+      "blind": "Small Blind",
+      "money": 43
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": "K",
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    }
+  ],
+  "community": [
+    {
+      "value": 2,
+      "suit": "♣"
+    },
+    {
+      "value": 5,
+      "suit": "♦"
+    },
+    {
+      "value": 7,
+      "suit": "♠"
+    },
+    {
+      "value": 5,
+      "suit": "♣"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "111",
+        "bet": 2
+      },
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": 2
+      }
+    ],
+    [
+      {
+        "player": "wy",
+        "bet": 0
+      },
+      {
+        "player": "111",
+        "bet": 0
+      },
+      {
+        "player": "222",
+        "bet": 0
+      }
+    ],
+    []
+  ],
+  "pot": 6,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Big Blind",
+      "money": 54
+    },
+    {
+      "username": "222",
+      "blind": "",
+      "money": 47
+    },
+    {
+      "username": "wy",
+      "blind": "Small Blind",
+      "money": 43
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": "K",
+      "suit": "♦"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    }
+  ],
+  "community": [
+    {
+      "value": 2,
+      "suit": "♣"
+    },
+    {
+      "value": 5,
+      "suit": "♦"
+    },
+    {
+      "value": 7,
+      "suit": "♠"
+    },
+    {
+      "value": 5,
+      "suit": "♣"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "111",
+        "bet": 2
+      },
+      {
+        "player": "wy",
+        "bet": 2
+      },
+      {
+        "player": "222",
+        "bet": 2
+      }
+    ],
+    [
+      {
+        "player": "wy",
+        "bet": 0
+      },
+      {
+        "player": "111",
+        "bet": 0
+      },
+      {
+        "player": "222",
+        "bet": 0
+      }
+    ],
+    [
+      {
+        "player": "wy",
+        "bet": 0
+      },
+      {
+        "player": "111",
+        "bet": 0
+      },
+      {
+        "player": "222",
+        "bet": 4
+      }
+    ]
+  ],
+  "pot": 10,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Big Blind",
+      "money": 54
+    },
+    {
+      "username": "222",
+      "blind": "",
+      "money": 43
+    },
+    {
+      "username": "wy",
+      "blind": "Small Blind",
+      "money": 43
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 3,
+      "suit": "♣"
+    },
+    {
+      "value": "A",
+      "suit": "♣"
+    }
+  ],
+  "community": [],
+  "bets": [
+    [
+      {
+        "player": "222",
+        "bet": 2
+      },
+      {
+        "player": "111",
+        "bet": 1
+      }
+    ]
+  ],
+  "pot": 3,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Small Blind",
+      "money": 53
+    },
+    {
+      "username": "222",
+      "blind": "Big Blind",
+      "money": 51
+    },
+    {
+      "username": "wy",
+      "blind": "",
+      "money": 43
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 3,
+      "suit": "♣"
+    },
+    {
+      "value": "A",
+      "suit": "♣"
+    }
+  ],
+  "community": [
+    {
+      "value": 6,
+      "suit": "♣"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    },
+    {
+      "value": "K",
+      "suit": "♣"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "222",
+        "bet": 4
+      },
+      {
+        "player": "111",
+        "bet": "Fold"
+      },
+      {
+        "player": "wy",
+        "bet": 4
+      }
+    ],
+    [
+      {
+        "player": "222",
+        "bet": 0
+      }
+    ]
+  ],
+  "pot": 9,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Small Blind",
+      "money": 53
+    },
+    {
+      "username": "222",
+      "blind": "Big Blind",
+      "money": 49
+    },
+    {
+      "username": "wy",
+      "blind": "",
+      "money": 39
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 3,
+      "suit": "♣"
+    },
+    {
+      "value": "A",
+      "suit": "♣"
+    }
+  ],
+  "community": [
+    {
+      "value": 6,
+      "suit": "♣"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    },
+    {
+      "value": "K",
+      "suit": "♣"
+    },
+    {
+      "value": "J",
+      "suit": "♦"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "222",
+        "bet": 4
+      },
+      {
+        "player": "111",
+        "bet": "Fold"
+      },
+      {
+        "player": "wy",
+        "bet": 4
+      }
+    ],
+    [
+      {
+        "player": "222",
+        "bet": 9
+      },
+      {
+        "player": "wy",
+        "bet": 9
+      }
+    ],
+    [
+      {
+        "player": "222",
+        "bet": 15
+      }
+    ]
+  ],
+  "pot": 42,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Small Blind",
+      "money": 53
+    },
+    {
+      "username": "222",
+      "blind": "Big Blind",
+      "money": 25
+    },
+    {
+      "username": "wy",
+      "blind": "",
+      "money": 30
+    }
+  ]
+}
+{
+  "mycards": [
+    {
+      "value": 3,
+      "suit": "♣"
+    },
+    {
+      "value": "A",
+      "suit": "♣"
+    }
+  ],
+  "community": [
+    {
+      "value": 6,
+      "suit": "♣"
+    },
+    {
+      "value": 10,
+      "suit": "♠"
+    },
+    {
+      "value": "K",
+      "suit": "♣"
+    },
+    {
+      "value": "J",
+      "suit": "♦"
+    },
+    {
+      "value": 5,
+      "suit": "♥"
+    }
+  ],
+  "bets": [
+    [
+      {
+        "player": "222",
+        "bet": 4
+      },
+      {
+        "player": "111",
+        "bet": "Fold"
+      },
+      {
+        "player": "wy",
+        "bet": 4
+      }
+    ],
+    [
+      {
+        "player": "222",
+        "bet": 9
+      },
+      {
+        "player": "wy",
+        "bet": 9
+      }
+    ],
+    [
+      {
+        "player": "222",
+        "bet": 15
+      },
+      {
+        "player": "wy",
+        "bet": 15
+      }
+    ],
+    [
+      {
+        "player": "222",
+        "bet": 13
+      }
+    ]
+  ],
+  "pot": 70,
+  "playersToAI": [
+    {
+      "username": "111",
+      "blind": "Small Blind",
+      "money": 53
+    },
+    {
+      "username": "222",
+      "blind": "Big Blind",
+      "money": 12
+    },
+    {
+      "username": "wy",
+      "blind": "",
+      "money": 15
+    }
+  ]
+}
