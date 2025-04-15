@@ -2,7 +2,7 @@ $(document).ready(function () {
   $('#gameDiv').hide();
   $('.modal-trigger').leanModal();
   $('.tooltipped').tooltip({ delay: 50 });
-  
+
   // 添加倒计时样式
   $('<style>')
     .prop('type', 'text/css')
@@ -34,8 +34,8 @@ socket.on('hostRoom', function (data) {
     if (data.players.length >= 11) {
       $('#hostModalContent').html(
         '<h5>房间号:</h5><code>' +
-          data.code +
-          '</code><br /><h5>警告: 房间中有太多玩家. 最多为11人.</h5><h5>当前在房间中的玩家:</h5>'
+        data.code +
+        '</code><br /><h5>警告: 房间中有太多玩家. 最多为11人.</h5><h5>当前在房间中的玩家:</h5>'
       );
       $('#playersNames').html(
         data.players.map(function (p) {
@@ -45,8 +45,8 @@ socket.on('hostRoom', function (data) {
     } else if (data.players.length > 1) {
       $('#hostModalContent').html(
         '<h5>房间号:</h5><code>' +
-          data.code +
-          '</code><br /><h5>当前在房间中的玩家:</h5>'
+        data.code +
+        '</code><br /><h5>当前在房间中的玩家:</h5>'
       );
       $('#playersNames').html(
         data.players.map(function (p) {
@@ -55,14 +55,14 @@ socket.on('hostRoom', function (data) {
       );
       $('#startGameArea').html(
         '<br /><button onclick=startGame(' +
-          data.code +
-          ') type="submit" class= "waves-effect waves-light green darken-3 white-text btn-flat">开始游戏</button >'
+        data.code +
+        ') type="submit" class= "waves-effect waves-light green darken-3 white-text btn-flat">开始游戏</button >'
       );
     } else {
       $('#hostModalContent').html(
         '<h5>房间号:</h5><code>' +
-          data.code +
-          '</code><br /><h5>当前在房间中的玩家:</h5>'
+        data.code +
+        '</code><br /><h5>当前在房间中的玩家:</h5>'
       );
       $('#playersNames').html(
         data.players.map(function (p) {
@@ -93,13 +93,13 @@ socket.on('hostRoomUpdate', function (data) {
 socket.on('joinRoomUpdate', function (data) {
   $('#startGameAreaDisconnectSituation').html(
     '<br /><button onclick=startGame(' +
-      data.code +
-      ') type="submit" class= "waves-effect waves-light green darken-3 white-text btn-flat">开始游戏</button >'
+    data.code +
+    ') type="submit" class= "waves-effect waves-light green darken-3 white-text btn-flat">开始游戏</button >'
   );
   $('#joinModalContent').html(
     '<h5>' +
-      data.host +
-      "的房间</h5><hr /><h5>当前在房间中的玩家:</h5><p>你现在是房主了.</p>"
+    data.host +
+    "的房间</h5><hr /><h5>当前在房间中的玩家:</h5><p>你现在是房主了.</p>"
   );
 
   $('#playersNamesJoined').html(
@@ -122,18 +122,18 @@ socket.on('joinRoom', function (data) {
     $('#navbar-ptwu').hide();
     $('#joinModal').closeModal();
     $('#mainContent').fadeOut(300);
-    
+
     // 检查是否已经存在等待页面，如果存在则移除
     if ($('#waitingPage').length > 0) {
       $('#waitingPage').remove();
     }
-    
+
     // 创建等待页面
     var waitingPage = $('<div id="waitingPage" class="container center-align" style="margin-top: 50px;"></div>');
     waitingPage.append('<h4>' + data.host + ' 的房间</h4>');
     waitingPage.append('<p>请等待房主开始游戏. 离开或刷新页面将会使你断开连接.</p>');
     waitingPage.append('<div class="center-align" style="margin-top: 20px;"><h5 class="white-text">请等待游戏开始</h5></div>');
-    
+
     // 添加到页面
     $('body').append(waitingPage);
   }
@@ -150,7 +150,7 @@ socket.on('dealt', function (data) {
 });
 
 socket.on('rerender', function (data) {
-  if(data.strength == '') {
+  if (data.strength == '') {
     if (data.myBet == 0) {
       $('#usernamesCards').text(data.username + ' - 我的手牌');
     } else {
@@ -162,7 +162,7 @@ socket.on('rerender', function (data) {
     if (data.myBet == 0) {
       $('#usernamesCards').text(data.username + ' - 我的手牌 - (' + strengthText + ')');
     } else {
-    $('#usernamesCards').html(data.username + ' - 我的手牌 - (' + strengthText + ') - 我的下注: ' + data.myBet + '<span style="color: #8B4513;">ⓜ</span>');
+      $('#usernamesCards').html(data.username + ' - 我的手牌 - (' + strengthText + ') - 我的下注: ' + data.myBet + '<span style="color: #8B4513;">ⓜ</span>');
     }
   }
   if (data.community != undefined)
@@ -175,13 +175,13 @@ socket.on('rerender', function (data) {
   if (data.currBet == undefined) data.currBet = 0;
   $('#table-title').html(
     '第' +
-      data.round +'局'+
-      '    |    ' +
-      data.stage +
-      '    |    当前最高下注: ' +
-      data.topBet + '<span style="color: #8B4513;">ⓜ</span>' +
-      '    |    底池: ' +
-      data.pot + '<span style="color: #8B4513;">ⓜ</span>'
+    data.round + '局' +
+    '    |    ' +
+    data.stage +
+    '    |    当前最高下注: ' +
+    data.topBet + '<span style="color: #8B4513;">ⓜ</span>' +
+    '    |    底池: ' +
+    data.pot + '<span style="color: #8B4513;">ⓜ</span>'
   );
   $('#opponentCards').html(
     data.players.map(function (p) {
@@ -215,11 +215,11 @@ socket.on('gameBegin', function (data) {
   $('#navbar-ptwu').hide();
   $('#joinModal').closeModal();
   $('#hostModal').closeModal();
-  
+
   // 移除所有等待界面的内容
   $('#waitingPage').remove();
   $('#waitingDiv').remove();
-  
+
   if (data == undefined) {
     alert('错误 - 不存在游戏.');
   } else {
@@ -236,15 +236,15 @@ socket.on('waitingForNextRound', function (data) {
   $('#joinModal').closeModal();
   $('#hostModal').closeModal();
   $('#mainContent').fadeOut(300);
-  
+
   $('#waitingDiv').remove();
-  
+
   var waitingDiv = $('<div id="waitingDiv" class="container center-align" style="margin-top: 50px;"></div>');
   waitingDiv.append('<h4>游戏正在进行中</h4>');
   waitingDiv.append('<p>你将在下一局开始时加入游戏</p>');
   waitingDiv.append('<p>当前房间: ' + data.host + ' 的房间</p>');
   waitingDiv.append('<p>当前玩家: ' + data.players.join(', ') + '</p>');
-  
+
   $('body').append(waitingDiv);
 });
 
@@ -256,12 +256,12 @@ socket.on('playerJoined', function (data) {
 socket.on('waitingPlayerJoined', function (data) {
   // 移除等待页面
   $('#waitingDiv').remove();
-  
+
   // 显示游戏界面
   $('#gameDiv').show().addClass('visible');
   var playerTable = $('.card:contains("玩家排行榜")').parent().parent();
   playerTable.appendTo('#gameDiv');
-  
+
   Materialize.toast('你已成功加入游戏!', 4000);
 });
 
@@ -271,24 +271,24 @@ function playNext() {
 
 function updateStatisticsTable(cardData) {
   const statisticsBody = $('#statisticsBody');
-  
+
   // 获取当前表格中的所有玩家记录
   const currentTable = {};
-  $('#statisticsBody tr').each(function() {
+  $('#statisticsBody tr').each(function () {
     const username = $(this).find('td:first').text();
     const profit = parseInt($(this).find('td:last').text());
     currentTable[username] = profit;
   });
-  
+
   // 更新或添加玩家记录
   cardData.forEach(player => {
     const profit = player.money - 50 - (50 * (player.buyIns || 0));
     currentTable[player.username] = profit;
   });
-  
+
   // 清空表格
   statisticsBody.empty();
-  
+
   // 按收益从高到低排序并显示所有记录
   Object.entries(currentTable)
     .sort(([, a], [, b]) => b - a)
@@ -323,12 +323,12 @@ socket.on('reveal', function (data) {
   }
   $('#table-title').html('本局赢家: ' + data.winners);
   $('#playNext').empty();
-  
+
   // 添加倒计时显示
   let countdown = 10;
   const countdownElement = $('<div class="countdown">下一局将在 <span class="countdown-number">10</span> 秒后开始</div>');
   $('#playNext').append(countdownElement);
-  
+
   const timer = setInterval(() => {
     countdown--;
     countdownElement.find('.countdown-number').text(countdown);
@@ -337,33 +337,33 @@ socket.on('reveal', function (data) {
       countdownElement.remove();
     }
   }, 1000);
-  
+
   updateStatisticsTable(data.cards);
-  
+
   var handTest;
-  if(data.hand == '')
-    handTest='';
-  if(data.hand == 'High Card')
-    handTest='高牌';
-  if(data.hand == 'Pair')
-    handTest='一对';
-  if(data.hand == 'Two Pair')
-    handTest='两对';
-  if(data.hand == 'Three of a Kind')
-    handTest='三条';
-  if(data.hand == 'Straight')
-    handTest='顺子';
-  if(data.hand == 'Flush')
-    handTest='同花';
-  if(data.hand == 'Full House')
-    handTest='葫芦';
-  if(data.hand == 'Four of a Kind')
-    handTest='四条';
-  if(data.hand == 'Straight Flush')
-    handTest='同花顺';
-  if(data.hand == 'Royal Flush')
-    handTest='皇家同花顺';
-    
+  if (data.hand == '')
+    handTest = '';
+  if (data.hand == 'High Card')
+    handTest = '高牌';
+  if (data.hand == 'Pair')
+    handTest = '一对';
+  if (data.hand == 'Two Pair')
+    handTest = '两对';
+  if (data.hand == 'Three of a Kind')
+    handTest = '三条';
+  if (data.hand == 'Straight')
+    handTest = '顺子';
+  if (data.hand == 'Flush')
+    handTest = '同花';
+  if (data.hand == 'Full House')
+    handTest = '葫芦';
+  if (data.hand == 'Four of a Kind')
+    handTest = '四条';
+  if (data.hand == 'Straight Flush')
+    handTest = '同花顺';
+  if (data.hand == 'Royal Flush')
+    handTest = '皇家同花顺';
+
   $('#blindStatus').text(handTest);
   $('#usernamesMoney').html(data.money + '<span style="color: #8B4513;">ⓜ</span>');
   $('#opponentCards').html(
@@ -391,12 +391,12 @@ socket.on('endHand', function (data) {
   // );
 
   $('#playNext').empty();
-  
+
   // 添加倒计时显示
   let countdown = 10;
   const countdownElement = $('<div class="countdown">下一局将在 <span class="countdown-number">10</span> 秒后开始</div>');
   $('#playNext').append(countdownElement);
-  
+
   const timer = setInterval(() => {
     countdown--;
     countdownElement.find('.countdown-number').text(countdown);
@@ -405,7 +405,7 @@ socket.on('endHand', function (data) {
       countdownElement.remove();
     }
   }, 1000);
-  
+
   updateStatisticsTable(data.cards);
   $('#blindStatus').text('');
   if (data.folded == 'Fold') {
@@ -562,33 +562,33 @@ function renderOpponent(name, data) {
   }
   var buyIns = Number(data.buyIns || 0);
   var buyInsText = '';
-  if(buyIns > 0)
-    buyInsText='次买入';
-  if(buyIns == 0)
-    buyInsText='';
-  if(buyIns < 0)
-    buyInsText='次卖出';
-  
+  if (buyIns > 0)
+    buyInsText = '次买入';
+  if (buyIns == 0)
+    buyInsText = '';
+  if (buyIns < 0)
+    buyInsText = '次卖出';
+
   var blindTest;
-  if(data.blind == '')
-    blindTest='';
-  if(data.blind == 'Big Blind')
-    blindTest='大盲';
-  if(data.blind == 'Small Blind')
-    blindTest='小盲';
-  
+  if (data.blind == '')
+    blindTest = '';
+  if (data.blind == 'Big Blind')
+    blindTest = '大盲';
+  if (data.blind == 'Small Blind')
+    blindTest = '小盲';
+
   var textTest = '';
-  if(data.text == '')
-    textTest='';
-  if(data.text == 'Their Turn')
-    textTest='行动中';
-  if(data.text == 'Fold')
-    textTest='已弃牌';
+  if (data.text == '')
+    textTest = '';
+  if (data.text == 'Their Turn')
+    textTest = '行动中';
+  if (data.text == 'Fold')
+    textTest = '已弃牌';
 
   // 根据钱数和all-in状态决定名字颜色和显示
-  var nameDisplay = data.money == 0 ?  
-      '<span style="color: red;">' + name + ' (ALL-IN)</span>' : name;
-  
+  var nameDisplay = data.money == 0 ?
+    '<span style="color: red;">' + name + '</span>' : name;
+
   if (buyIns !== 0) {
     if (data.text == 'Fold') {
       return (
@@ -611,7 +611,7 @@ function renderOpponent(name, data) {
       if (data.text == 'Their Turn') {
         if (data.isChecked)
           return (
-            '<div class="col s12 m2 opponentCard"><div class="card yellow darken-3"><div class="card-content black-text"><span class="card-title">' +
+            '<div class="col s12 m2 opponentCard"><div class="card yellow darken-3"><div class="card-content black-text"><span class="card-title black-text">' +
             nameDisplay +
             '<br />过牌</span><p><div class="center-align"><div class="blankCard" id="opponent-card" /><div class="blankCard" id="opponent-card" /></div><br /><br /><br /><br /><br />' +
             blindTest +
@@ -628,7 +628,7 @@ function renderOpponent(name, data) {
           );
         else if (bet == 0) {
           return (
-            '<div class="col s12 m2 opponentCard"><div class="card yellow darken-3"><div class="card-content black-text"><span class="card-title">' +
+            '<div class="col s12 m2 opponentCard"><div class="card yellow darken-3"><div class="card-content black-text"><span class="card-title black-text">' +
             nameDisplay +
             '</span><p><div class="center-align"><div class="blankCard" id="opponent-card" /><div class="blankCard" id="opponent-card" /></div><br /><br /><br /><br /><br />' +
             blindTest +
@@ -645,13 +645,13 @@ function renderOpponent(name, data) {
           );
         } else {
           return (
-            '<div class="col s12 m2 opponentCard"><div class="card yellow darken-3"><div class="card-content black-text"><span class="card-title">' +
+            '<div class="col s12 m2 opponentCard"><div class="card yellow darken-3"><div class="card-content black-text"><span class="card-title black-text">' +
             nameDisplay +
             '<br />下注: ' +
             bet + '<span style="color: #8B4513;">ⓜ</span>' +
             '</span><p><div class="center-align"><div class="blankCard" id="opponent-card" /><div class="blankCard" id="opponent-card" /></div><br /><br /><br /><br /><br />' +
             blindTest +
-            '<br /><br />' +
+            '<br />' +
             textTest +
             '</p></div><div class="card-action yellow lighten-1 black-text center-align" style="font-size: 20px;">' +
             data.money + '<span style="color: #8B4513;">ⓜ</span>' +
@@ -769,7 +769,7 @@ function renderOpponent(name, data) {
             bet + '<span style="color: #8B4513;">ⓜ</span>' +
             '</span><p><div class="center-align"><div class="blankCard" id="opponent-card" /><div class="blankCard" id="opponent-card" /></div><br /><br /><br /><br /><br />' +
             blindTest +
-            '<br /><br />' +
+            '<br />' +
             textTest +
             '</p></div><div class="card-action yellow lighten-1 black-text center-align" style="font-size: 20px;">' +
             data.money + '<span style="color: #8B4513;">ⓜ</span>' +
@@ -831,40 +831,40 @@ function renderOpponentCards(name, data) {
   }
   var buyIns2 = Number(data.buyIns || 0);
   var buyInsText2 = '';
-  if(buyIns2 > 0)
-    buyInsText2='次买入';
-  if(buyIns2 == 0)
-    buyInsText2='';
-  if(buyIns2 < 0)
-    buyInsText2='次卖出';
+  if (buyIns2 > 0)
+    buyInsText2 = '次买入';
+  if (buyIns2 == 0)
+    buyInsText2 = '';
+  if (buyIns2 < 0)
+    buyInsText2 = '次卖出';
 
   var endHandTest;
-  if(data.endHand == '')
-    endHandTest='';
-  if(data.endHand == 'High Card')
-    endHandTest='高牌';
-  if(data.endHand == 'Pair')
-    endHandTest='一对';
-  if(data.endHand == 'Two Pair')
-    endHandTest='两对';
-  if(data.endHand == 'Three of a Kind')
-    endHandTest='三条';
-  if(data.endHand == 'Straight')
-    endHandTest='顺子';
-  if(data.endHand == 'Flush')
-    endHandTest='同花';
-  if(data.endHand == 'Full House')
-    endHandTest='葫芦';
-  if(data.endHand == 'Four of a Kind')
-    endHandTest='四条';
-  if(data.endHand == 'Straight Flush')
-    endHandTest='同花顺';
-  if(data.endHand == 'Royal Flush')
-    endHandTest='皇家同花顺';
+  if (data.endHand == '')
+    endHandTest = '';
+  if (data.endHand == 'High Card')
+    endHandTest = '高牌';
+  if (data.endHand == 'Pair')
+    endHandTest = '一对';
+  if (data.endHand == 'Two Pair')
+    endHandTest = '两对';
+  if (data.endHand == 'Three of a Kind')
+    endHandTest = '三条';
+  if (data.endHand == 'Straight')
+    endHandTest = '顺子';
+  if (data.endHand == 'Flush')
+    endHandTest = '同花';
+  if (data.endHand == 'Full House')
+    endHandTest = '葫芦';
+  if (data.endHand == 'Four of a Kind')
+    endHandTest = '四条';
+  if (data.endHand == 'Straight Flush')
+    endHandTest = '同花顺';
+  if (data.endHand == 'Royal Flush')
+    endHandTest = '皇家同花顺';
 
   // 根据钱数和all-in状态决定名字颜色和显示
-  var nameDisplay = data.money == 0 ?  
-      '<span style="color: red;">' + name + ' (ALL-IN)</span>' : name;
+  var nameDisplay = data.money == 0 ?
+    '<span style="color: red;">' + name + '</span>' : name;
 
   if (buyIns2 !== 0) {
     if (data.folded)
@@ -968,8 +968,8 @@ function updateBetDisplay() {
   if ($('#betRangeSlider').val() == $('#usernamesMoney').text()) {
     $('#betDisplay').html(
       '<h3 class="center-align">All-In ' +
-        $('#betRangeSlider').val() + '<span style="color: #8B4513;">ⓜ</span>' +
-        '</h36>'
+      $('#betRangeSlider').val() + '<span style="color: #8B4513;">ⓜ</span>' +
+      '</h36>'
     );
   } else {
     $('#betDisplay').html(
@@ -992,8 +992,8 @@ function updateBetModal() {
 function updateRaiseDisplay() {
   $('#raiseDisplay').html(
     '<h3 class="center-align">将下注加到 ' +
-      $('#raiseRangeSlider').val() + '<span style="color: #8B4513;">ⓜ</span>' +
-      '</h3>'
+    $('#raiseRangeSlider').val() + '<span style="color: #8B4513;">ⓜ</span>' +
+    '</h3>'
   );
 }
 
@@ -1028,15 +1028,15 @@ socket.on('displayPossibleMoves', function (data) {
 function renderSelf(data) {
   $('#playNext').empty();
   $('#usernamesMoney').html(data.money + '<span style="color: #8B4513;">ⓜ</span>');
-  
+
   var blindTest;
-  if(data.blind == '')
-    blindTest='';
-  if(data.blind == 'Big Blind')
-    blindTest='大盲';
-  if(data.blind == 'Small Blind')
-    blindTest='小盲';
-    
+  if (data.blind == '')
+    blindTest = '';
+  if (data.blind == 'Big Blind')
+    blindTest = '大盲';
+  if (data.blind == 'Small Blind')
+    blindTest = '小盲';
+
   if (data.text == 'Their Turn') {
     $('#playerInformationCard').removeClass('grey');
     $('#playerInformationCard').removeClass('grey');
@@ -1078,3 +1078,9 @@ function renderSelf(data) {
   }
   $('#blindStatus').text(blindTest);
 }
+
+socket.on('closeRaiseWindow', function() {
+  // 关闭加注窗口
+  $('#raiseModal').hide();
+  $('#betModal').hide();
+});

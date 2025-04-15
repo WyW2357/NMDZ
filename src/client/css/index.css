@@ -84,6 +84,10 @@ code {
   font-size: 16px;
 }
 
+#opponentCards .col .card .card-content {
+  height: 290px;
+}
+
 .theirTurn {
   border: 5px solid yellow;
 }
@@ -116,13 +120,11 @@ code {
 
 .blankCard {
   float: left;
-  background: repeating-linear-gradient(
-    45deg,
-    #606dbc,
-    #606dbc 10px,
-    #465298 10px,
-    #465298 20px
-  );
+  background: repeating-linear-gradient(45deg,
+      #606dbc,
+      #606dbc 10px,
+      #465298 10px,
+      #465298 20px);
   border: 5px solid black;
   border-radius: 5px;
   height: 84px;

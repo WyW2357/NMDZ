@@ -39,6 +39,7 @@ const Game = function (name, host) {
   this.isWriting = false;  // 添加写入锁
   this.isWritingTeach = false;  // TeachData写入锁
   this.isWritingTeach2 = false;  // TeachData2写入锁
+  this.actionTimers = new Map(); // 添加行动计时器
   this.AA = true;
   this.BB = true;
   this.CC = true;
@@ -185,6 +186,7 @@ const Game = function (name, host) {
       : 0;
     this.roundData.turn = this.players[goFirstIndex].getUsername();
     this.players[goFirstIndex].setStatus('Their Turn');
+    this.startActionTimer(this.players[goFirstIndex]);
   };
 
   this.startNewRound = () => {
@@ -504,6 +506,7 @@ const Game = function (name, host) {
         this.players[i].getStatus() !== 'Fold'
       ) {
         this.players[i].setStatus('Their Turn');
+        this.startActionTimer(this.players[i]);
       } else if (this.players[i].getStatus() !== 'Fold') {
         this.players[i].setStatus('');
       }
@@ -658,6 +661,8 @@ const Game = function (name, host) {
       );
       if (A == 0) {
         this.players[currTurnIndex].setStatus('Their Turn');
+        // 开始新玩家的行动计时
+        this.startActionTimer(this.players[currTurnIndex]);
       }
     }
     if (!handOver) {
@@ -862,6 +867,7 @@ const Game = function (name, host) {
   };
 
   this.endHandAllFold = (username) => {
+    this.clearAllActionTimers();
     this.roundInProgress = false;
     let cardData = [];
     for (let i = 0; i < this.players.length; i++) {
@@ -903,6 +909,7 @@ const Game = function (name, host) {
   };
 
   this.revealCards = (winners) => {
+    this.clearAllActionTimers();
     this.roundInProgress = false;
     let cardData = [];
     for (let i = 0; i < this.players.length; i++) {
@@ -1213,6 +1220,7 @@ const Game = function (name, host) {
   };
 
   this.fold = (socket) => {
+    this.clearActionTimer(this.findPlayer(socket.id));
     this.checkBigBlindWent(socket);
     const player = this.findPlayer(socket.id);
     let preFoldBetAmount = 0;
@@ -1258,6 +1266,7 @@ const Game = function (name, host) {
   };
 
   this.call = (socket) => {
+    this.clearActionTimer(this.findPlayer(socket.id));
     this.checkBigBlindWent(socket);
     const player = this.findPlayer(socket.id);
     let currBet = this.getPlayerBetInStage(player);
@@ -1363,6 +1372,7 @@ const Game = function (name, host) {
   };
 
   this.bet = (socket, bet) => {
+    this.clearActionTimer(this.findPlayer(socket.id));
     this.checkBigBlindWent(socket);
     if (bet >= this.bigBlind) {
       const player = this.findPlayer(socket.id);
@@ -1398,6 +1408,7 @@ const Game = function (name, host) {
   };
 
   this.check = (socket) => {
+    this.clearActionTimer(this.findPlayer(socket.id));
     this.checkBigBlindWent(socket);
     let currBet = 0;
     const player = this.findPlayer(socket.id);
@@ -1438,6 +1449,7 @@ const Game = function (name, host) {
   };
 
   this.raise = (socket, bet) => {
+    this.clearActionTimer(this.findPlayer(socket.id));
     this.checkBigBlindWent(socket);
     const topBet = this.getCurrentTopBet();
     const player = this.findPlayer(socket.id);
@@ -1586,6 +1598,44 @@ const Game = function (name, host) {
       this.emitToAll('playerDisconnected', { player: player.getUsername() });
     }
   };
+
+  // 开始玩家行动计时
+  this.startActionTimer = (player) => {
+    // 清除之前的计时器
+    this.clearActionTimer(player);
+    
+    // 设置新的计时器
+    const timer = setTimeout(() => {
+      if (player.getStatus() === 'Their Turn') {
+        // 发送关闭加注窗口的信号
+        player.emit('closeRaiseWindow', {});
+        // 等待100ms确保窗口关闭后再执行弃牌
+        setTimeout(() => {
+          this.log(`${player.getUsername()} 30秒未行动，自动弃牌`);
+          this.fold(player.socket);
+        }, 100);
+      }
+    }, 30000); // 30秒超时
+    
+    this.actionTimers.set(player.getUsername(), timer);
+  }
+  
+  // 清除玩家行动计时器
+  this.clearActionTimer = (player) => {
+    const timer = this.actionTimers.get(player.getUsername());
+    if (timer) {
+      clearTimeout(timer);
+      this.actionTimers.delete(player.getUsername());
+    }
+  }
+
+  // 清除所有行动计时器
+  this.clearAllActionTimers = () => {
+    for (const timer of this.actionTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.actionTimers.clear();
+  }
 };
 
 module.exports = Game;
