@@ -580,8 +580,26 @@ function renderOpponent(name, data) {
   var textTest = '';
   if (data.text == '')
     textTest = '';
-  if (data.text == 'Their Turn')
-    textTest = '行动中';
+  if (data.text == 'Their Turn'){
+    // 添加倒计时显示
+    let countdown = 30;
+    textTest = '行动中 <span class="countdown-number" style="color: black;">30</span>';
+    // 在DOM更新后启动倒计时
+    setTimeout(() => {
+      const countdownElement = $('.countdown-number').last();
+      const timer = setInterval(() => {
+        countdown--;
+        if (countdown < 10) {
+          countdownElement.css('color', 'red');
+        }
+        countdownElement.text(countdown);
+        if (countdown <= 0) {
+          clearInterval(timer);
+          countdownElement.parent().remove();
+        }
+      }, 1000);
+    }, 0);
+  }
   if (data.text == 'Fold')
     textTest = '已弃牌';
 
@@ -1083,4 +1101,6 @@ socket.on('closeRaiseWindow', function() {
   // 关闭加注窗口
   $('#raiseModal').hide();
   $('#betModal').hide();
+  // 移除背景遮罩层
+  $('.lean-overlay').hide();
 });
