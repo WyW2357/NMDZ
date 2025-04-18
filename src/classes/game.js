@@ -770,14 +770,53 @@ const Game = function (name, host) {
   };
 
   this.distributeMoney = (result) => {
+    // 计算所有玩家的牌力并排序
+    let playerHands = this.players.map(p => {
+      const hand = Hand.solve(this.convertCardsFormat(p.cards.concat(this.community)));
+      return {
+        player: p,
+        hand: hand
+      };
+    });
+
+    // 使用Hand.winners获取严格的排序
+    const allHands = playerHands.map(ph => ph.hand);
+    let remainingHands = [...allHands];
+    let currentStrength = 12;
+
+    while (remainingHands.length > 0) {
+      // 获取当前最大牌
+      const currentWinners = Hand.winners(remainingHands);
+      const maxHand = currentWinners[0];
+
+      // 找到所有使用这个牌型的玩家
+      const playersWithMaxHand = playerHands.filter(ph =>
+        ph.hand.toString() === maxHand.toString() && !ph.handStrength
+      );
+
+      // 为这些玩家分配handStrength
+      playersWithMaxHand.forEach(ph => {
+        ph.handStrength = currentStrength;
+      });
+
+      // 从剩余牌中移除这个牌型
+      remainingHands = remainingHands.filter(hand =>
+        hand.toString() !== maxHand.toString()
+      );
+
+      currentStrength--;
+    }
+
     let playerInvestments = this.players.map((p) => {
       const winData = result.winnerData.find((w) => w.player === p);
       const invested = this.getTotalInvested(p);
+      const playerHand = playerHands.find(ph => ph.player === p);
+      this.log(p.getUsername() + ' ' + playerHand.handStrength + ' ' + playerHand.hand.rank + ' ' + playerHand.hand.cards.join(' '));
       return {
         player: p,
         invested: invested,
         originalInvested: invested,
-        handStrength: winData ? winData.rank : -1,
+        handStrength: playerHand.handStrength,
         result: -invested,
         live: p.getStatus() !== 'Fold',
         winner: false,
@@ -834,6 +873,25 @@ const Game = function (name, host) {
     const res = { winnerData: winnerData, playersData: playerArray };
     return res;
   };
+
+  // this.distributeMoney = () => {
+  //   let playersData = this.players.map((p) => {
+  //     const live = p.getStatus() != 'Fold';
+  //     return {
+  //       player: p,
+  //       hand: live ? Hand.solve(this.convertCardsFormat(p.cards).concat(this.community)) : null,
+  //       invest: this.getTotalInvested(p),
+  //       live: live,
+  //       gain: 0,
+  //     }
+  //   });
+  //   playersData = playersData.filter((p) => p.invest > 0);
+  //   let activePlayersData = playersData.filter((p) => p.live);
+  //   assert(sum(playersData.map((p) => p.invest)) === this.getCurrentPot());
+  //   while (activePlayersData.length > 1) {
+
+  //   }
+  // };
 
   this.arraysEqual = (a, b) => {
     if (a === b) return true;
