@@ -874,24 +874,44 @@ const Game = function (name, host) {
     return res;
   };
 
-  // this.distributeMoney = () => {
-  //   let playersData = this.players.map((p) => {
-  //     const live = p.getStatus() != 'Fold';
-  //     return {
-  //       player: p,
-  //       hand: live ? Hand.solve(this.convertCardsFormat(p.cards).concat(this.community)) : null,
-  //       invest: this.getTotalInvested(p),
-  //       live: live,
-  //       gain: 0,
-  //     }
-  //   });
-  //   playersData = playersData.filter((p) => p.invest > 0);
-  //   let activePlayersData = playersData.filter((p) => p.live);
-  //   assert(sum(playersData.map((p) => p.invest)) === this.getCurrentPot());
-  //   while (activePlayersData.length > 1) {
+  this.distributeMoney = () => {
+    let playersData = this.players.map((p) => {
+      const live = p.getStatus() != 'Fold';
+      return {
+        player: p,
+        hand: live ? Hand.solve(this.convertCardsFormat(p.cards).concat(this.community)) : null,
+        invest: this.getTotalInvested(p),
+        live: live,
+        gain: 0,
+      }
+    });
+    playersData = playersData.filter((p) => p.invest > 0);
+    let activePlayersData = playersData.filter((p) => p.live);
+    let currentBet = 0;
+    assert(sum(playersData.map((p) => p.invest)) === this.getCurrentPot());
 
-  //   }
-  // };
+    while (activePlayersData.length > 1) {
+      let currentHands = activePlayersData.map((p) => p.hand);
+      let winnerHands = Hand.winners(currentHands);
+      let winnerData = [];
+      if (Array.isArray(winnerHands)) {
+        for (playerData of activePlayersData) {
+          for (winnerHand of winnerHands) {
+            let winnerArray = winnerHands.toString().split(', ');
+            if (this.arraysEqual(playerData.hand.card.sort(), winnerArray.sort())) {
+              winnerData.push(playerData);
+              break;
+            }
+          }
+        }
+      }
+      else {
+        this.log('错误:赢家无法计算');
+      }
+
+
+    }
+  };
 
   this.arraysEqual = (a, b) => {
     if (a === b) return true;
