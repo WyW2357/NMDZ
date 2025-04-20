@@ -25,7 +25,7 @@ const Game = function (name, host) {
     bets: [],
   };
   this.community = [];
-  this.foldPot = 0;
+  this.foldMargin = []; // Array: {player, amount} 
   this.bigBlindWent = false;
   this.lastMoveParsed = { move: '', player: '' };
   this.roundInProgress = false;
@@ -200,16 +200,10 @@ const Game = function (name, host) {
       }
     });
 
-    // 记录玩家初始金额
-    this.initialMoney.clear();
-    this.players.forEach(player => {
-      this.initialMoney.set(player.getUsername(), player.getMoney());
-    });
-
     this.disconnectedPlayers = [];
     this.lastMoveParsed = { move: '', player: '' };
     this.roundInProgress = true;
-    this.foldPot = 0;
+    this.foldMargin = [];
     this.bigBlindWent = false;
     this.community = [];
     this.roundData.turn = '';
@@ -236,7 +230,7 @@ const Game = function (name, host) {
     this.assignBlind();
 
     if (this.autoBuyIns) {
-      for (player of this.players) {
+      for (let player of this.players) {
         if (player.getMoney() <= 2) {
           player.money += 50;//100
           player.buyIns = player.buyIns + 1;
@@ -247,6 +241,13 @@ const Game = function (name, host) {
         }
       }
     }
+
+    // 记录玩家初始金额
+    this.initialMoney.clear();
+    this.players.forEach(player => {
+      this.initialMoney.set(player.getUsername(), player.getMoney());
+    });
+
     this.log('玩家信息:');
     this.players.forEach((player, index) => {
       this.log(`${player.getUsername()}  筹码: ${player.getMoney()} 买入: ${player.buyIns} 手牌: ${player.cards.map(card => `${card.getValue()}${card.getSuit()}`).join(' ')}`);
@@ -368,7 +369,8 @@ const Game = function (name, host) {
           0
         );
       }
-      return this.foldPot + sum;
+      let foldMarginPot = this.foldMargin.map((a) => a.amount).reduce((a, b) => a + b, 0);
+      return foldMarginPot + sum;
     }
   };
 
@@ -469,7 +471,8 @@ const Game = function (name, host) {
         // 如果掉线玩家未弃牌，则自动弃牌
         if (this.players[i].getStatus() !== 'Fold') {
           const currentBet = this.getPlayerBetInStage(this.players[i]);
-          this.foldPot = this.foldPot + currentBet;
+          if (currentBet > 0)
+            this.foldMargin.push({ player: this.players[i], amount: currentBet });
 
           // 更新当前回合的下注记录
           const currentRoundBets = this.getCurrentRoundBets();
@@ -559,12 +562,11 @@ const Game = function (name, host) {
         this.updateStage();
       } else if (this.roundData.bets.length == 4) {
         handOver = true;
-        const roundResults = this.evaluateWinners();
-        for (playerResult of roundResults.playersData) {
-          playerResult.player.setStatus(playerResult.hand.name);
+        const playersData = this.distributeMoney();
+        for (let p of playersData) {
+          p.player.setStatus(p.hand != null ? p.hand.name : 'Fold');
         }
-        const winningData = this.distributeMoney(roundResults);
-        this.revealCards(winningData.filter((a) => a.winner));
+        this.revealCards(playersData.filter((p) => p.gain > 0));
       } else {
         this.log('本轮的阶段不存在!');
       }
@@ -594,7 +596,8 @@ const Game = function (name, host) {
           // 如果玩家掉线，自动执行弃牌
           currentPlayer.setStatus('Fold');
           const currentBet = this.getPlayerBetInStage(currentPlayer);
-          this.foldPot = this.foldPot + currentBet;
+          if (currentBet > 0)
+            this.foldMargin.push({ player: currentPlayer, amount: currentBet });
 
           // 更新当前回合的下注记录
           const currentRoundBets = this.getCurrentRoundBets();
@@ -643,12 +646,11 @@ const Game = function (name, host) {
               this.updateStage();
             } else if (this.roundData.bets.length == 4) {
               handOver = true;
-              const roundResults = this.evaluateWinners();
-              for (playerResult of roundResults.playersData) {
-                playerResult.player.setStatus(playerResult.hand.name);
+              const playersData = this.distributeMoney();
+              for (let p of playersData) {
+                p.player.setStatus(p.hand != null ? p.hand.name : 'Fold');
               }
-              const winningData = this.distributeMoney(roundResults);
-              this.revealCards(winningData.filter((a) => a.winner));
+              this.revealCards(playersData.filter((p) => p.gain > 0));
             }
             A = 1;
           }
@@ -717,188 +719,52 @@ const Game = function (name, host) {
     );
   };
 
-  this.calculateMoney = (winnerPot, players) => {
-    let playerInvestments = [...players];
-    while (playerInvestments.length > 1) {
-      const sortedByInvested = playerInvestments.sort((a, b) =>
-        a.invested < b.invested ? -1 : 1
-      );
-      const minStack = sortedByInvested[0].invested;
-      winnerPot += minStack * playerInvestments.length;
-      for (p of playerInvestments) {
-        p.invested -= minStack;
-      }
-      const sortedByHandStrength = playerInvestments.sort((a, b) =>
-        a.handStrength > b.handStrength ? -1 : 1
-      );
-      const maxHand = sortedByHandStrength[0].handStrength;
-      const winners = playerInvestments.filter(
-        (p) => p.handStrength === maxHand && p.live
-      );
-
-      const baseAmount = Math.trunc(winnerPot / winners.length);  // 直接使用整数除法
-      const remainder = winnerPot % winners.length;
-      // 找到离庄家最近的赢家
-      let closestToDealer = winners[0];
-      let minDistance = 20;
-
-      for (const winner of winners) {
-        const seat = this.players.findIndex(p => p === winner.player);
-        const distance = (seat - this.roundData.dealer) >= 0 ? (seat - this.roundData.dealer) : (seat - this.roundData.dealer + this.players.length);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestToDealer = winner;
-        }
-      }
-
-      // 分配奖金
-      for (const winner of winners) {
-        winner.result += baseAmount;
-      }
-
-      // 将余数给离庄家最近的赢家
-      if (remainder > 0) {
-        closestToDealer.result += remainder;
-      }
-      playerInvestments = playerInvestments.filter((p) => p.invested > 0);
-      winnerPot = 0;
-    }
-    if (playerInvestments.length === 1) {
-      let p = playerInvestments[0];
-      p.result += winnerPot + p.invested;
-    }
-  };
-
-  this.distributeMoney = (result) => {
-    // 计算所有玩家的牌力并排序
-    let playerHands = this.players.map(p => {
-      const hand = Hand.solve(this.convertCardsFormat(p.cards.concat(this.community)));
-      return {
-        player: p,
-        hand: hand
-      };
-    });
-
-    // 使用Hand.winners获取严格的排序
-    const allHands = playerHands.map(ph => ph.hand);
-    let remainingHands = [...allHands];
-    let currentStrength = 12;
-
-    while (remainingHands.length > 0) {
-      // 获取当前最大牌
-      const currentWinners = Hand.winners(remainingHands);
-      const maxHand = currentWinners[0];
-
-      // 找到所有使用这个牌型的玩家
-      const playersWithMaxHand = playerHands.filter(ph =>
-        ph.hand.toString() === maxHand.toString() && !ph.handStrength
-      );
-
-      // 为这些玩家分配handStrength
-      playersWithMaxHand.forEach(ph => {
-        ph.handStrength = currentStrength;
-      });
-
-      // 从剩余牌中移除这个牌型
-      remainingHands = remainingHands.filter(hand =>
-        hand.toString() !== maxHand.toString()
-      );
-
-      currentStrength--;
-    }
-
-    let playerInvestments = this.players.map((p) => {
-      const winData = result.winnerData.find((w) => w.player === p);
-      const invested = this.getTotalInvested(p);
-      const playerHand = playerHands.find(ph => ph.player === p);
-      this.log(p.getUsername() + ' ' + playerHand.handStrength + ' ' + playerHand.hand.rank + ' ' + playerHand.hand.cards.join(' '));
-      return {
-        player: p,
-        invested: invested,
-        originalInvested: invested,
-        handStrength: playerHand.handStrength,
-        result: -invested,
-        live: p.getStatus() !== 'Fold',
-        winner: false,
-        gain: 0,
-      };
-    });
-    let pot = this.foldPot;
-    this.calculateMoney(pot, playerInvestments);
-
-    for (p of playerInvestments) {
-      p.gain = p.originalInvested + p.result;
-      p.player.money += p.gain;
-      if (p.gain > 0) {
-        p.winner = true;
-      }
-    }
-    return playerInvestments;
-  };
-
-  this.evaluateWinners = () => {
-    let handArray = [];
-    let playerArray = [];
-    for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].getStatus() != 'Fold') {
-        let h = Hand.solve(
-          this.convertCardsFormat(this.players[i].cards.concat(this.community))
-        );
-        handArray.push(h);
-        playerArray.push({ player: this.players[i], hand: h });
-      }
-    }
-    const winners = Hand.winners(handArray);
-
-    let winnerData = [];
-    if (Array.isArray(winners)) {
-      for (playerHand of playerArray) {
-        for (winner of winners) {
-          let winnerArray = winner.toString().split(', ');
-          if (
-            this.arraysEqual(playerHand.hand.cards.sort(), winnerArray.sort())
-          ) {
-            winnerData.push({
-              player: playerHand.player,
-              rank: playerHand.hand.rank,
-              handTitle: playerHand.hand.name,
-            });
-            break;
-          }
-        }
-      }
-    } else {
-      this.log('错误:赢家无法计算');
-    }
-    const res = { winnerData: winnerData, playersData: playerArray };
-    return res;
-  };
-
   this.distributeMoney = () => {
+    // 计算分钱所需的基本信息
     let playersData = this.players.map((p) => {
       const live = p.getStatus() != 'Fold';
       return {
         player: p,
-        hand: live ? Hand.solve(this.convertCardsFormat(p.cards).concat(this.community)) : null,
+        hand: live ? Hand.solve(this.convertCardsFormat(p.cards.concat(this.community))) : null,
         invest: this.getTotalInvested(p),
         live: live,
         gain: 0,
       }
     });
+    for (let i = 0; i < playersData.length; i++) {
+      const foldPD = this.foldMargin.find((f) => f.player === playersData[i].player);
+      if (foldPD)
+        playersData[i].invest += foldPD.amount;
+    }
+    // for (let pd of playersData)
+    //   this.log(`name: ${pd.player.name}, hand: ${pd.hand}, invest: ${pd.invest}, live: ${pd.live}`);
+    for (let i = 0; i < this.roundData.bets.length; i++) {
+      let stageData = this.roundData.bets[i];
+      for (let j = 0; j < stageData.length; j++)
+        this.log(`name: ${stageData[j].player}, bet: ${stageData[j].bet}`);
+    }
     playersData = playersData.filter((p) => p.invest > 0);
     let activePlayersData = playersData.filter((p) => p.live);
     let currentBet = 0;
-    assert(sum(playersData.map((p) => p.invest)) === this.getCurrentPot());
+    let previousBet = 0;
+    console.assert((playersData.map((p) => p.invest)).reduce((a, b) => a + b, 0) === this.getCurrentPot(), 'potError');
+    this.log('getTotalInvested 计算得到的底池: ' + (playersData.map((p) => p.invest)).reduce((a, b) => a + b, 0));
+    this.log('getCurrentPot 实际底池: ' + this.getCurrentPot());
+    for (let p of playersData) {
+      if (!p.live)
+        this.log('弃牌玩家' + p.player.getUsername() + '计算得到的invest: ' + p.invest);
+    }
 
-    while (activePlayersData.length > 1) {
-      let currentHands = activePlayersData.map((p) => p.hand);
-      let winnerHands = Hand.winners(currentHands);
-      let winnerData = [];
+    // 循环分钱流程
+    while (activePlayersData.length > 0) {
+      let currentHands = activePlayersData.map((p) => p.hand); // 当前参与玩家的手牌
+      let winnerHands = Hand.winners(currentHands); // 当前赢家手牌
+      let winnerData = []; // 当前赢家数据
       if (Array.isArray(winnerHands)) {
-        for (playerData of activePlayersData) {
-          for (winnerHand of winnerHands) {
-            let winnerArray = winnerHands.toString().split(', ');
-            if (this.arraysEqual(playerData.hand.card.sort(), winnerArray.sort())) {
+        for (let playerData of activePlayersData) {
+          for (let winnerHand of winnerHands) {
+            let winnerArray = winnerHand.toString().split(', ');
+            if (this.arraysEqual(playerData.hand.cards.sort(), winnerArray.sort())) {
               winnerData.push(playerData);
               break;
             }
@@ -909,8 +775,49 @@ const Game = function (name, host) {
         this.log('错误:赢家无法计算');
       }
 
+      winnerData.sort((a, b) => a.invest - b.invest);
+      previousBet = currentBet;
+      currentBet = winnerData[0].invest;
+      // 计算当前赢家赢得的底池
+      const winnerPot = playersData.reduce((acc, cur) => {
+        let playerPot = 0;
+        if (cur.invest > currentBet) {
+          playerPot = currentBet - previousBet;
+        }
+        else if (cur.invest > previousBet) {
+          playerPot = cur.invest - previousBet;
+        }
+        return acc + playerPot;
+      }, 0);
 
+      const baseAmount = Math.trunc(winnerPot / winnerData.length);  // 直接使用整数除法
+      const remainder = winnerPot % winnerData.length;
+      let closestToDealer = winnerData[0];
+      let minDistance = 20;
+
+      for (const winner of winnerData) {
+        const seat = this.players.findIndex(p => p === winner.player);
+        const distance = (seat - this.roundData.dealer) >= 0 ?
+          (seat - this.roundData.dealer) :
+          (seat - this.roundData.dealer + this.players.length);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestToDealer = winner;
+        }
+      }
+      // 分配奖金
+      for (const winner of winnerData) {
+        winner.player.money += baseAmount;
+        playersData.find((p) => p.player === winner.player).gain += baseAmount;
+      }
+      // 将余数给离庄家最近的赢家
+      if (remainder > 0) {
+        closestToDealer.player.money += remainder;
+        playersData.find((p) => p.player === closestToDealer.player).gain += remainder;
+      }
+      activePlayersData = activePlayersData.filter((p) => p.invest > currentBet);
     }
+    return playersData;
   };
 
   this.arraysEqual = (a, b) => {
@@ -1236,7 +1143,8 @@ const Game = function (name, host) {
     if (player.getStatus() === 'Their Turn') {
       this.log('disconnectPlayer掉线处理');
       const currentBet = this.getPlayerBetInStage(player);
-      this.foldPot = this.foldPot + currentBet;
+      if (currentBet > 0)
+        this.foldMargin.push({ player: player, amount: currentBet });
 
       // 更新当前回合的下注记录
       const currentRoundBets = this.getCurrentRoundBets();
@@ -1310,7 +1218,8 @@ const Game = function (name, host) {
       preFoldBetAmount += roundDataStage.bet;
     }
     player.setStatus('Fold');
-    this.foldPot = this.foldPot + preFoldBetAmount;
+    if (preFoldBetAmount > 0)
+      this.foldMargin.push({ player: player, amount: preFoldBetAmount });
     this.log(`${player.getUsername()} [弃牌]`);
 
     if (
