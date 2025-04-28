@@ -1,0 +1,43 @@
+[
+    {
+        "Username": "Like+",
+        "Profit": 626
+    },
+    {
+        "Username": "金二爷",
+        "Profit": 540
+    },
+    {
+        "Username": "鸡宝宝",
+        "Profit": 617
+    },
+    {
+        "Username": "喷射战士豪二爷",
+        "Profit": 258
+    },
+    {
+        "Username": "七月既望ty",
+        "Profit": 345
+    },
+    {
+        "Username": "JK",
+        "Profit": 99
+    },
+    {
+        "Username": "豪二爷",
+        "Profit": 50
+    },
+    {
+        "Username": "DZ",
+        "Profit": 408
+    },
+    {
+        "Username": "wzw",
+        "Profit": -679
+    },
+    {
+        "Username": "RoOo",
+        "Profit": -2264
+    }
+]
+

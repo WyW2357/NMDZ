@@ -1,29 +1,19 @@
-//representation of a card in a standard 52 deck
+// 卡牌类：标准52张扑克牌中1张牌的表示
 const Card = function (value, suit) {
-  this.value = value;
-  this.suit = suit;
+  // 初始化牌的点数和花色
+  this.Value = value;
+  this.Suit = suit;
 
-  const constructor = (function () {})(this);
-
-  this.compare = (card) => {
-    if (this.value < card.getValue()) return -1;
-    if (this.value == card.getValue()) return 0;
-    return 1;
+  // 获取牌的点数
+  this.GetValue = () => {
+    return this.Value;
   };
 
-  this.isGreater = (card) => {
-    return this.value > card.getValue() ? true : false;
+  // 获取牌的花色
+  this.GetSuit = () => {
+    return this.Suit;
   };
-
-  this.getValue = () => {
-    return this.value;
-  };
-
-  this.getSuit = () => {
-    return this.suit;
-  };
-
-  this.print = () => console.log(this.getValue() + ' of ' + this.getSuit());
 };
 
+// 导出 Card 类
 module.exports = Card;

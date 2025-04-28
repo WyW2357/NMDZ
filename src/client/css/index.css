@@ -88,10 +88,6 @@ code {
   height: 290px;
 }
 
-.theirTurn {
-  border: 5px solid yellow;
-}
-
 .playingCard_red_opponent {
   float: left;
   border: 5px solid black;
@@ -149,4 +145,17 @@ code {
 .toast {
   position: relative;
   z-index: -1 !important;
+}
+
+/* 倒计时相关样式 */
+.countdown {
+  text-align: center;
+  font-size: 1.2em;
+  color: white;
+  margin: 10px 0;
+}
+
+.countdown-number {
+  font-weight: bold;
+  color: #FF5722;
 }

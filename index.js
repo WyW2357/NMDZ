@@ -1,1 +1,0 @@
-exports.Game = require('./src/classes/game.js'); 
