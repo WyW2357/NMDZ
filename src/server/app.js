@@ -92,7 +92,7 @@ io.on('connection', (socket) => {
   socket.on('raiseModalData', () => {
     const game = rooms.find((r) => r.FindPlayer(socket.id).Socket.id == socket.id);
     socket.emit('updateRaiseModal', {
-      TopBet: game.GetCurrentTopBet(),
+      NextRaise: game.GetNextRaise(),
       UsernameMoney: game.GetPlayerBetInStage(game.FindPlayer(socket.id)) + game.FindPlayer(socket.id).GetMoney(),
     });
   });
@@ -100,8 +100,11 @@ io.on('connection', (socket) => {
   // 处理下注模态框数据请求
   socket.on('betModalData', () => {
     const game = rooms.find((r) => r.FindPlayer(socket.id).Socket.id == socket.id);
+    const player = game.FindPlayer(socket.id);
+    const playerMoney = player.GetMoney();
+    const otherPlayersMaxMoney = Math.max(...game.Players.filter(p => p !== player).map(p => p.GetMoney()));
     socket.emit('updateBetModal', {
-      UsernameMoney: game.FindPlayer(socket.id).GetMoney(), 
+      UsernameMoney: Math.min(playerMoney, otherPlayersMaxMoney), 
     });
   }); 
 

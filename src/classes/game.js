@@ -31,6 +31,8 @@ const Game = function (name, host) {
   this.IsWriting = false;         // 日志写入锁
   this.ActionTimers = new Map();  // 玩家行动计时器
   this.InitialMoney = new Map();  // 记录玩家初始金额
+  this.NextRaise = 0;             // 下一次加注的最小值
+  this.LastBet = 0;               // 上一次的下注值
 
   // 清空同名GameData.txt
   const logFile = path.join(__dirname, `../../GameData/GameData_${this.GameName}.txt`);
@@ -107,6 +109,8 @@ const Game = function (name, host) {
     this.BigBlindWent = false;
     this.Community = [];
     this.RoundData.Bets = [];
+    this.NextRaise = 2 * this.BigBlind;
+    this.LastBet = this.BigBlind;
     for (let player of this.Players) player.AllIn = false;
     this.DealCards();
     // 打印所有玩家信息
@@ -119,7 +123,7 @@ const Game = function (name, host) {
     this.AssignBlind();
     // 自动买入
     for (let player of this.Players) {
-      if (player.GetMoney() <= this.BigBlind) {
+      if (player.GetMoney() < 10) {
         player.Money += 50;
         player.BuyIns = player.BuyIns + 1;
       }
@@ -210,6 +214,11 @@ const Game = function (name, host) {
     return this.Players.reduce((maxBet, player) => Math.max(maxBet, this.GetPlayerBetInStage(player)), 0);
   };
 
+  // 获取下一次加注的最小值
+  this.GetNextRaise = () => {
+    return this.NextRaise;
+  };
+
   // 获取当前阶段名称
   this.GetStageName = () => {
     if (this.RoundData.Bets.length == 1) return '翻牌前';
@@ -251,6 +260,7 @@ const Game = function (name, host) {
 
   // 更新阶段
   this.UpdateStage = () => {
+    this.LastBet = 0;
     // 检查是否有掉线玩家需要处理
     for (let player of this.Players) {
       if (this.DisconnectedPlayers.includes(player)) {
@@ -765,9 +775,9 @@ const Game = function (name, host) {
         // 如果当前玩家没有足够的钱，则全押
         if (player.GetMoney() - topBet <= 0) {
           this.SetCurrentRoundBets(this.GetCurrentRoundBets().map((a) => a.Player == player.Username ? { Player: player.GetUsername(), Bet: player.GetMoney() } : a));
+          this.Log(`${player.GetUsername()} [跟注]ALL-IN 0 -> ${player.GetMoney()}`);
           player.Money = 0;
           player.AllIn = true;
-          this.Log(`${player.GetUsername()} [跟注]ALL-IN 0 -> ${player.GetMoney()}`);
         } else {
           this.SetCurrentRoundBets(this.GetCurrentRoundBets().map((a) => a.Player == player.Username ? { Player: player.GetUsername(), Bet: topBet } : a));
           player.Money = player.Money - topBet;
@@ -779,9 +789,9 @@ const Game = function (name, host) {
             Player: player.GetUsername(),
             Bet: player.GetMoney()
           });
+          this.Log(`${player.GetUsername()} [跟注]ALL-IN 0 -> ${player.GetMoney()}`);
           player.Money = 0;
           player.AllIn = true;
-          this.Log(`${player.GetUsername()} [跟注]ALL-IN 0 -> ${player.GetMoney()}`);
         } else {
           this.GetCurrentRoundBets().push({
             Player: player.GetUsername(),
@@ -796,9 +806,9 @@ const Game = function (name, host) {
       if (this.GetCurrentRoundBets().some((a) => a.Player == player.GetUsername())) {
         if (player.GetMoney() + currBet - topBet <= 0) {
           this.SetCurrentRoundBets(this.GetCurrentRoundBets().map((a) => a.Player == player.Username ? { Player: player.GetUsername(), Bet: player.GetMoney() + currBet } : a));
+          this.Log(`${player.GetUsername()} [跟注]ALL-IN ${currBet} -> ${player.GetMoney() + currBet}`);
           player.Money = 0;
           player.AllIn = true;
-          this.Log(`${player.GetUsername()} [跟注]ALL-IN ${currBet} -> ${player.GetMoney() + currBet}`);
         } else {
           this.SetCurrentRoundBets(this.GetCurrentRoundBets().map((a) => a.Player == player.Username ? { Player: player.GetUsername(), Bet: topBet } : a));
           player.Money = player.Money - (topBet - currBet);
@@ -811,6 +821,7 @@ const Game = function (name, host) {
 
   // 下注
   this.Bet = (player, bet) => {
+    this.NextRaise = 2 * bet;
     this.ClearActionTimer(player);
     this.CheckBigBlindWent(player);
     this.SetCurrentRoundBets(this.GetCurrentRoundBets().filter((a) => a.Player != player.GetUsername()));
@@ -824,6 +835,7 @@ const Game = function (name, host) {
       this.Log(`${player.GetUsername()} [下注]ALL-IN ${bet}`);
     } 
     else this.Log(`${player.GetUsername()} [下注] ${bet}`);
+    this.LastBet = bet;
     this.MoveOntoNextPlayer();
   };
 
@@ -847,6 +859,8 @@ const Game = function (name, host) {
     this.CheckBigBlindWent(player);
     const currBet = this.GetPlayerBetInStage(player);
     const moneyToRemove = bet - currBet;
+    const moneyToAdd = bet - this.LastBet;
+    this.NextRaise = Math.max(bet + moneyToAdd, this.NextRaise);
     // 如果当前玩家没有下注，则将当前下注设置为当前玩家的下注
     if (!this.GetCurrentRoundBets().some((a) => a.Player == player.GetUsername()))
       this.GetCurrentRoundBets().push({
@@ -861,6 +875,7 @@ const Game = function (name, host) {
       this.Log(`${player.GetUsername()} [加注]ALL-IN ${currBet} -> ${bet}`);
     } 
     else this.Log(`${player.GetUsername()} [加注] ${currBet} -> ${bet}`);
+    this.LastBet = bet;
     this.MoveOntoNextPlayer();
   };
 
@@ -882,6 +897,7 @@ const Game = function (name, host) {
         possibleMoves.Check = 'yes';
         possibleMoves.Call = 'no';
       }
+      if (this.NextRaise >= player.GetMoney() + playerBet) possibleMoves.Raise = 'all-in';
     } 
     else {
       possibleMoves.Raise = 'no';
@@ -889,6 +905,7 @@ const Game = function (name, host) {
       possibleMoves.Fold = 'no';
     } 
     if(topBet == playerBet) possibleMoves.Fold = 'no';
+    if(player.GetMoney() < 2) possibleMoves.Bet = 'no';
     if (topBet >= player.GetMoney() + playerBet) {
       possibleMoves.Raise = 'no';
       possibleMoves.Call = 'all-in';

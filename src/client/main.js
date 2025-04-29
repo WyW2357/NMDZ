@@ -305,9 +305,7 @@ var Fold = function () {
 };
 
 var Bet = function () {
-  if (parseInt($('#betRangeSlider').val()) == 0) Materialize.toast('你必须有所下注!', 4000);
-  else if (parseInt($('#betRangeSlider').val()) < 2) Materialize.toast('最小下注为 2<span style="color: #8B4513;">ⓜ</span>.', 4000);
-  else socket.emit('moveMade', { Move: 'Bet', Bet: parseInt($('#betRangeSlider').val()) });
+  socket.emit('moveMade', { Move: 'Bet', Bet: parseInt($('#betRangeSlider').val()) });
 };
 
 function Call() {
@@ -319,8 +317,7 @@ var Check = function () {
 };
 
 var Raise = function () {
-  if (parseInt($('#raiseRangeSlider').val()) < $('#raiseRangeSlider').prop('min')) Materialize.toast('你的加注必须高于当前最高下注!', 4000);
-  else socket.emit('moveMade', { Move: 'Raise', Bet: parseInt($('#raiseRangeSlider').val()) });
+  socket.emit('moveMade', { Move: 'Raise', Bet: parseInt($('#raiseRangeSlider').val()) });
 };
 
 function UpdateStatisticsTable(playerStats) {
@@ -804,9 +801,11 @@ socket.on('updateBetModal', function (data) {
   // 设置下注滑块的最大值、最小值和初始值
   $('#betRangeSlider').attr({
     max: data.UsernameMoney,
-    min: 0,
-    value: 0,
+    min: data.UsernameMoney < 2 ? 1 : 2,
+    value: data.UsernameMoney < 2 ? 1 : 2,  
   });
+  // 立即更新显示
+  UpdateBetDisplay();
 });
 
 function UpdateBetDisplay() {
@@ -822,9 +821,10 @@ socket.on('updateRaiseModal', function (data) {
   // 设置加注滑块的最大值、最小值和初始值
   $('#raiseRangeSlider').attr({
     max: data.UsernameMoney,
-    min: data.TopBet,
-    value: data.TopBet,
+    min: Math.min(data.NextRaise, data.UsernameMoney),
+    value: Math.min(data.NextRaise, data.UsernameMoney),
   });
+  UpdateRaiseDisplay();
 });
 
 function UpdateRaiseDisplay() {
@@ -840,12 +840,17 @@ socket.on('displayPossibleMoves', function (data) {
   else $('#usernameCheck').hide();
   if (data.Bet == 'yes') $('#usernameBet').show();
   else $('#usernameBet').hide();
-  if (data.Call != 'no' || data.Call == 'all-in') {
-    $('#usernameCall').show();
+  if (data.Call != 'no') {
     if (data.Call == 'all-in') $('#usernameCall').text('跟注 All-In');
     else $('#usernameCall').html('跟注 ' + data.Call + '<span style="color: #8B4513;">ⓜ</span>');
-  } else $('#usernameCall').hide();
-  if (data.Raise == 'yes') $('#usernameRaise').show();
+    $('#usernameCall').show();
+  } 
+  else $('#usernameCall').hide();
+  if (data.Raise != 'no') {
+    if (data.Raise == 'all-in') $('#usernameRaise').text('加注 All-In');
+    else $('#usernameRaise').text('加注');
+    $('#usernameRaise').show();
+  }
   else $('#usernameRaise').hide();
 });
 
